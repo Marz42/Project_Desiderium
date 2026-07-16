@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}简报预览 — Desiderium{% endblock %}
+{% block content %}
+<div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+  <div>
+    <h2 class="text-2xl font-semibold">简报预览</h2>
+    <p class="text-slate-400 text-sm mt-1">{{ brief_date.isoformat() }}</p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <form method="post" action="/brief/sync">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="hidden" name="brief_date" value="{{ brief_date.isoformat() }}">
+      <button type="submit" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-sm">同步入选</button>
+    </form>
+    <a href="/brief/export/markdown?d={{ brief_date.isoformat() }}"
+       class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-sm">下载 Markdown</a>
+    <a href="/brief/export/html?d={{ brief_date.isoformat() }}"
+       class="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-sm">下载 HTML</a>
+  </div>
+</div>
+
+{% if not sections %}
+<div class="text-center py-16 text-slate-400">
+  暂无入选方向。请先在<a href="/candidates?d={{ brief_date.isoformat() }}" class="text-blue-400">今日候选</a>中勾选。
+</div>
+{% else %}
+
+<div class="grid lg:grid-cols-2 gap-6">
+  <div class="space-y-4">
+    <h3 class="font-medium text-slate-300">编辑顺序与备注</h3>
+    <form method="post" action="/brief/reorder" id="reorder-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="hidden" name="brief_date" value="{{ brief_date.isoformat() }}">
+      <input type="hidden" name="item_ids" id="item-ids"
+             value="{% for section in sections %}{% for a in section.angles %}{{ a.item.id }}{% if not loop.last %},{% endif %}{% endfor %}{% if not loop.last %},{% endif %}{% endfor %}">
+      <div class="space-y-2" id="brief-sortable">
+        {% for section in sections %}
+        {% for row in section.angles %}
+        <div class="bg-slate-900 border border-slate-800 rounded-lg p-3 flex gap-2 items-start" data-item-id="{{ row.item.id }}">
+          <div class="flex flex-col gap-1">
+            <button type="button" onclick="moveItem(this, -1)" class="text-xs px-1 rounded bg-slate-800">↑</button>
+            <button type="button" onclick="moveItem(this, 1)" class="text-xs px-1 rounded bg-slate-800">↓</button>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-medium">{{ row.angle.angle_zh }}</p>
+            <p class="text-xs text-slate-500">{{ section.trend.canonical_name }}</p>
+            <p class="text-xs text-slate-400 mt-1">备注：{{ row.manager_note or '（无）' }}</p>
+          </div>
+        </div>
+        {% endfor %}
+        {% endfor %}
+      </div>
+      <button type="submit" class="mt-3 px-4 py-2 rounded bg-slate-800 hover:bg-slate-700 text-sm">保存顺序</button>
+    </form>
+
+    <div class="space-y-2 mt-4">
+      <h4 class="text-sm text-slate-400">编辑备注</h4>
+      {% for section in sections %}
+      {% for row in section.angles %}
+      <form method="post" action="/brief/items/{{ row.item.id }}/note" class="flex gap-2 items-center">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="brief_date" value="{{ brief_date.isoformat() }}">
+        <span class="text-xs text-slate-500 w-32 truncate">{{ row.angle.angle_zh[:20] }}</span>
+        <input name="note" value="{{ row.manager_note or '' }}" class="flex-1 px-2 py-1 rounded bg-slate-950 border border-slate-700 text-xs">
+        <button type="submit" class="px-2 py-1 rounded bg-slate-800 text-xs">保存</button>
+      </form>
+      {% endfor %}
+      {% endfor %}
+    </div>
+  </div>
+
+  <div>
+    <h3 class="font-medium text-slate-300 mb-3">Markdown 预览</h3>
+    <pre class="bg-slate-900 border border-slate-800 rounded-xl p-4 text-xs overflow-x-auto whitespace-pre-wrap text-slate-300 max-h-[70vh]">{{ markdown_preview }}</pre>
+  </div>
+</div>
+{% endif %}
+
+<script>
+function moveItem(btn, dir) {
+  const row = btn.closest('[data-item-id]');
+  const list = document.getElementById('brief-sortable');
+  const items = [...list.children];
+  const idx = items.indexOf(row);
+  const target = idx + dir;
+  if (target < 0 || target >= items.length) return;
+  if (dir < 0) list.insertBefore(row, items[target]);
+  else list.insertBefore(items[target], row);
+  document.getElementById('item-ids').value = [...list.children].map(el => el.dataset.itemId).join(',');
+}
+</script>
+{% endblock %}

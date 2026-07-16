@@ -498,6 +498,7 @@ class CreativeAngle(Base):
     daily_candidates: Mapped[list[DailyCandidate]] = relationship(back_populates="creative_angle")
     brief_items: Mapped[list[BriefItem]] = relationship(back_populates="creative_angle")
     publication_records: Mapped[list[PublicationRecord]] = relationship(back_populates="creative_angle")
+    status_audits: Mapped[list[AngleStatusAudit]] = relationship(back_populates="creative_angle")
 
 
 class DailyCandidate(Base):
@@ -592,6 +593,28 @@ class BriefItem(Base):
 
     brief: Mapped[Brief] = relationship(back_populates="items")
     creative_angle: Mapped[CreativeAngle] = relationship(back_populates="brief_items")
+
+
+class AngleStatusAudit(Base):
+    __tablename__ = "angle_status_audits"
+    __table_args__ = (Index("ix_angle_status_audits_angle_created", "creative_angle_id", "created_at"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    creative_angle_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("creative_angles.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    from_status: Mapped[AngleStatus | None] = mapped_column(Enum(AngleStatus, name="angle_status"), nullable=True)
+    to_status: Mapped[AngleStatus] = mapped_column(Enum(AngleStatus, name="angle_status"), nullable=False)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+    creative_angle: Mapped[CreativeAngle] = relationship(back_populates="status_audits")
 
 
 class PublicationRecord(Base):

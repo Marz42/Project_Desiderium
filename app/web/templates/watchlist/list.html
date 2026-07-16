@@ -72,9 +72,11 @@
         <td>
           <div class="actions">
             <form method="post" action="/watchlist/{{ item.id }}/crawl" style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token or '' }}">
               <button type="submit" class="btn btn-sm" {% if not item.enabled %}disabled{% endif %}>抓取</button>
             </form>
             <form method="post" action="/watchlist/{{ item.id }}/toggle" style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token or '' }}">
               <button type="submit" class="btn btn-sm">{{ '启用' if not item.enabled else '停用' }}</button>
             </form>
           </div>

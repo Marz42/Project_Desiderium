@@ -91,6 +91,11 @@ class SemanticAnalysisService:
                 llm_failures += 1
                 logger.exception("semantic analysis error for trend %s: %s", trend.id, exc)
 
+        from app.services.candidate_generation import CandidateGenerationService
+
+        gen = CandidateGenerationService(self._session)
+        candidate_summary = await gen.generate_for_date(analysis_date)
+
         await self._session.commit()
         return {
             "analysis_date": analysis_date.isoformat(),
@@ -100,6 +105,7 @@ class SemanticAnalysisService:
             "llm_failures": llm_failures,
             "low_confidence_trends": low_confidence,
             "llm_usage": self._llm.usage.model_dump(),
+            "daily_candidates": candidate_summary,
         }
 
     async def analyze_trend(

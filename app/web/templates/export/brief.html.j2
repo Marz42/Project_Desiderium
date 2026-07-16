@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>今日番剧解说趋势简报 — {{ brief_date.isoformat() }}</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #1e293b; }
+    h1 { border-bottom: 2px solid #3b82f6; padding-bottom: 0.5rem; }
+    h2 { margin-top: 2rem; color: #1d4ed8; }
+    h3 { color: #475569; font-size: 1rem; margin-top: 1.25rem; }
+    .meta { color: #64748b; font-size: 0.9rem; }
+    .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; background: #e2e8f0; font-size: 0.8rem; margin-right: 0.5rem; }
+    ul { padding-left: 1.25rem; }
+    a { color: #2563eb; }
+    .note { background: #f8fafc; border-left: 3px solid #3b82f6; padding: 0.75rem 1rem; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>今日番剧解说趋势简报</h1>
+  <p class="meta">生成日期：{{ brief_date.isoformat() }}<br>
+  覆盖范围：最近24小时新内容、72小时短期趋势、7天持续趋势</p>
+
+  {% for section in sections %}
+  {% set trend = section.trend %}
+  <section>
+    <h2>{{ loop.index }}. {{ trend.canonical_name }}</h2>
+    <p>
+      <span class="badge">{{ lifecycle_labels.get(trend.lifecycle_status.value, trend.lifecycle_status.value) }}</span>
+      <span class="badge">热度 {{ '%.0f'|format(trend.score or 0) }}/100</span>
+    </p>
+
+    <h3>为什么热门</h3>
+    <p>{{ section.why_trending or trend.summary_zh or '（暂无说明）' }}</p>
+
+    <h3>代表视频</h3>
+    <ul>
+      {% for v in section.evidence_videos %}
+      <li>
+        <strong>{{ v.title_original }}</strong>
+        {% if v.title_zh %}<br>{{ v.title_zh }}{% endif %}
+        <br><span class="meta">{{ v.channel_name or '—' }}
+        {% if v.published_at %}｜{{ v.published_at.strftime('%Y-%m-%d') }}{% endif %}
+        {% if v.url %}｜<a href="{{ v.url }}">链接</a>{% endif %}</span>
+      </li>
+      {% else %}
+      <li>（暂无代表视频）</li>
+      {% endfor %}
+    </ul>
+
+    <h3>建议创作方向</h3>
+    <ol>
+      {% for row in section.angles %}
+      <li>{{ row.angle.angle_zh }} — <em>{{ format_labels.get(row.angle.format, row.angle.format.value) }}</em></li>
+      {% endfor %}
+    </ol>
+
+    {% set notes = section.angles | selectattr('manager_note') | list %}
+    {% if notes %}
+    <div class="note">
+      <strong>管理者备注</strong>
+      <ul>
+        {% for row in notes %}
+        <li>{{ row.angle.angle_zh }}: {{ row.manager_note }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </section>
+  {% endfor %}
+</body>
+</html>

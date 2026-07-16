@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录 — Desiderium</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center">
+  <div class="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-xl p-6">
+    <h1 class="text-xl font-semibold mb-2">管理者登录</h1>
+    <p class="text-slate-400 text-sm mb-6">番剧解说趋势情报系统</p>
+    {% if error %}
+    <div class="mb-4 px-3 py-2 rounded bg-red-950 border border-red-800 text-red-200 text-sm">密码错误</div>
+    {% endif %}
+    <form method="post" action="/login">
+      <input type="hidden" name="next" value="{{ next }}">
+      <label class="block text-sm text-slate-400 mb-1">密码</label>
+      <input type="password" name="password" required autofocus
+             class="w-full mb-4 px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 focus:border-blue-500 outline-none">
+      <button type="submit" class="w-full py-2 rounded-lg bg-blue-600 hover:bg-blue-500 font-medium">登录</button>
+    </form>
+  </div>
+</body>
+</html>

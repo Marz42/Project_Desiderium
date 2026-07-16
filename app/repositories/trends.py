@@ -21,6 +21,29 @@ class TrendsRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    async def get_by_id(self, trend_id: uuid.UUID) -> TrendTheme | None:
+        return await self._session.get(TrendTheme, trend_id)
+
+    async def list_score_snapshots(self, trend_id: uuid.UUID, *, limit: int = 30) -> list[TrendScoreSnapshot]:
+        stmt = (
+            select(TrendScoreSnapshot)
+            .where(TrendScoreSnapshot.trend_id == trend_id)
+            .order_by(TrendScoreSnapshot.snapshot_date.desc())
+            .limit(limit)
+        )
+        return list((await self._session.scalars(stmt)).all())
+
+    async def list_members_with_content(self, trend_id: uuid.UUID) -> list[TrendMember]:
+        from sqlalchemy.orm import selectinload
+
+        stmt = (
+            select(TrendMember)
+            .where(TrendMember.trend_id == trend_id)
+            .options(selectinload(TrendMember.content_item))
+            .order_by(TrendMember.added_at.desc())
+        )
+        return list((await self._session.scalars(stmt)).all())
+
     async def get_by_canonical_name(self, canonical_name: str) -> TrendTheme | None:
         stmt = select(TrendTheme).where(TrendTheme.canonical_name == canonical_name)
         return await self._session.scalar(stmt)

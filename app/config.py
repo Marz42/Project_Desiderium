@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     llm_base_url: str = Field(default="", alias="LLM_BASE_URL")
     llm_model: str = Field(default="", alias="LLM_MODEL")
     secret_key: str = Field(default="change-me-in-production", alias="SECRET_KEY")
+    manager_password: str = Field(default="", alias="MANAGER_PASSWORD")
 
     @property
     def database_url_str(self) -> str:

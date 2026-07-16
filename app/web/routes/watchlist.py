@@ -2,12 +2,10 @@ from __future__ import annotations
 
 import logging
 import uuid
-from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette.templating import Jinja2Templates
 
 from app.db import get_db
 from app.jobs.crawl_tasks import crawl_single_item
@@ -15,11 +13,12 @@ from app.models import Platform, WatchItemType, WatchTier
 from app.repositories.watchlist import CrawlJobRepository
 from app.schemas.watchlist import WatchItemCreate, WatchItemUpdate, parse_tags
 from app.services.watchlist import WatchlistService
+from app.web.deps import TEMPLATES, flash_redirect, verify_csrf
+from app.web.session import get_csrf_token
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/watchlist", tags=["watchlist"])
-templates = Jinja2Templates(directory=str(Path(__file__).resolve().parent.parent / "templates"))
 
 TIERS = [t.value for t in WatchTier]
 TYPES = [t.value for t in WatchItemType]
@@ -27,9 +26,7 @@ PLATFORMS = [p.value for p in Platform]
 
 
 def _flash_redirect(url: str, message: str, *, error: bool = False) -> RedirectResponse:
-    sep = "&" if "?" in url else "?"
-    flash_type = "error" if error else "success"
-    return RedirectResponse(f"{url}{sep}flash={message}&flash_type={flash_type}", status_code=303)
+    return flash_redirect(url, message, error=error)
 
 
 @router.get("", response_class=HTMLResponse)
@@ -49,7 +46,7 @@ async def list_watchlist(
     if enabled == "false":
         items = [i for i in items if not i["enabled"]]
 
-    return templates.TemplateResponse(
+    return TEMPLATES.TemplateResponse(
         request,
         "watchlist/list.html",
         {
@@ -60,21 +57,30 @@ async def list_watchlist(
             "active_nav": "watchlist",
             "flash_message": flash,
             "flash_type": flash_type,
+            "csrf_token": get_csrf_token(request),
         },
     )
 
 
 @router.get("/new", response_class=HTMLResponse)
 async def new_watchlist_form(request: Request):
-    return templates.TemplateResponse(
+    return TEMPLATES.TemplateResponse(
         request,
         "watchlist/form.html",
-        {"item": None, "tiers": TIERS, "types": TYPES, "platforms": PLATFORMS, "active_nav": "watchlist"},
+        {
+            "item": None,
+            "tiers": TIERS,
+            "types": TYPES,
+            "platforms": PLATFORMS,
+            "active_nav": "watchlist",
+            "csrf_token": get_csrf_token(request),
+        },
     )
 
 
 @router.post("")
 async def create_watchlist(
+    request: Request,
     type: str = Form(...),
     platform: str = Form(...),
     name: str = Form(...),
@@ -83,8 +89,10 @@ async def create_watchlist(
     tags: str = Form(""),
     note: str = Form(""),
     enabled: str = Form("true"),
+    csrf_token: str = Form(""),
     db: AsyncSession = Depends(get_db),
 ):
+    verify_csrf(request, form_token=csrf_token)
     service = WatchlistService(db)
     external_id = url_or_id.strip() or name.strip()
     if type in {"keyword", "anime"}:
@@ -112,7 +120,7 @@ async def create_watchlist(
 
 @router.get("/import", response_class=HTMLResponse)
 async def import_form(request: Request, flash: str | None = None, flash_type: str | None = None):
-    return templates.TemplateResponse(
+    return TEMPLATES.TemplateResponse(
         request,
         "watchlist/import.html",
         {
@@ -120,6 +128,7 @@ async def import_form(request: Request, flash: str | None = None, flash_type: st
             "active_nav": "watchlist",
             "flash_message": flash,
             "flash_type": flash_type,
+            "csrf_token": get_csrf_token(request),
         },
     )
 
@@ -128,15 +137,21 @@ async def import_form(request: Request, flash: str | None = None, flash_type: st
 async def import_csv(
     request: Request,
     file: UploadFile = File(...),
+    csrf_token: str = Form(""),
     db: AsyncSession = Depends(get_db),
 ):
+    verify_csrf(request, form_token=csrf_token)
     content = (await file.read()).decode("utf-8-sig")
     service = WatchlistService(db)
     result = await service.import_csv(content)
-    return templates.TemplateResponse(
+    return TEMPLATES.TemplateResponse(
         request,
         "watchlist/import.html",
-        {"result": result, "active_nav": "watchlist"},
+        {
+            "result": result,
+            "active_nav": "watchlist",
+            "csrf_token": get_csrf_token(request),
+        },
     )
 
 
@@ -164,10 +179,15 @@ async def watchlist_detail(
         for j in jobs
     ]
 
-    return templates.TemplateResponse(
+    return TEMPLATES.TemplateResponse(
         request,
         "watchlist/detail.html",
-        {"item": item, "crawl_jobs": crawl_jobs, "active_nav": "watchlist"},
+        {
+            "item": item,
+            "crawl_jobs": crawl_jobs,
+            "active_nav": "watchlist",
+            "csrf_token": get_csrf_token(request),
+        },
     )
 
 
@@ -182,15 +202,23 @@ async def edit_watchlist_form(
     if item is None:
         return _flash_redirect("/watchlist", "监控项不存在", error=True)
 
-    return templates.TemplateResponse(
+    return TEMPLATES.TemplateResponse(
         request,
         "watchlist/form.html",
-        {"item": item, "tiers": TIERS, "types": TYPES, "platforms": PLATFORMS, "active_nav": "watchlist"},
+        {
+            "item": item,
+            "tiers": TIERS,
+            "types": TYPES,
+            "platforms": PLATFORMS,
+            "active_nav": "watchlist",
+            "csrf_token": get_csrf_token(request),
+        },
     )
 
 
 @router.post("/{item_id}")
 async def update_watchlist(
+    request: Request,
     item_id: uuid.UUID,
     name: str = Form(...),
     url_or_id: str = Form(""),
@@ -198,8 +226,10 @@ async def update_watchlist(
     tags: str = Form(""),
     note: str = Form(""),
     enabled: str = Form("true"),
+    csrf_token: str = Form(""),
     db: AsyncSession = Depends(get_db),
 ):
+    verify_csrf(request, form_token=csrf_token)
     service = WatchlistService(db)
     try:
         await service.update_item(
@@ -220,7 +250,13 @@ async def update_watchlist(
 
 
 @router.post("/{item_id}/toggle")
-async def toggle_watchlist(item_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def toggle_watchlist(
+    request: Request,
+    item_id: uuid.UUID,
+    csrf_token: str = Form(""),
+    db: AsyncSession = Depends(get_db),
+):
+    verify_csrf(request, form_token=csrf_token)
     service = WatchlistService(db)
     try:
         item = await service.toggle_enabled(item_id)
@@ -231,7 +267,13 @@ async def toggle_watchlist(item_id: uuid.UUID, db: AsyncSession = Depends(get_db
 
 
 @router.post("/{item_id}/crawl")
-async def trigger_crawl(item_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def trigger_crawl(
+    request: Request,
+    item_id: uuid.UUID,
+    csrf_token: str = Form(""),
+    db: AsyncSession = Depends(get_db),
+):
+    verify_csrf(request, form_token=csrf_token)
     service = WatchlistService(db)
     item = await service.get_item(item_id)
     if item is None:
@@ -250,7 +292,13 @@ async def trigger_crawl(item_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/{item_id}/delete")
-async def delete_watchlist(item_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def delete_watchlist(
+    request: Request,
+    item_id: uuid.UUID,
+    csrf_token: str = Form(""),
+    db: AsyncSession = Depends(get_db),
+):
+    verify_csrf(request, form_token=csrf_token)
     service = WatchlistService(db)
     try:
         await service.delete_item(item_id)

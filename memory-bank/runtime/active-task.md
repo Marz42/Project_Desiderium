@@ -1,44 +1,20 @@
-# Active Task: Stage 4 — Subtitle & LLM Semantic Analysis
+# Active Task: Stage 5 — Admin Backend & Brief Export
 
-**Status:** completed | **Started:** 2026-07-17 | **Completed:** 2026-07-17 | **Depends on:** Stage 3 ✓
+**Status:** completed | **Depends on:** Stage 4 ✓
 
 ## Objective
-Turn data trends into actionable creative directions for the manager.
+Complete the manager's daily end-to-end workflow via web UI.
 
 ## Deliverables
-
-### Subtitle/Transcript (P4-01→07)
-- [x] Transcript state machine (pending→success/failed/unavailable)
-- [x] Priority channel subtitle extraction (public captions)
-- [x] Fallback: no captions → metadata-only
-- [x] Optional ASR adapter interface
-- [x] Length limits + segment caching
-- [x] Failure reason recording
-
-### LLM Adapter (P4-08→15)
-- [x] Provider-agnostic interface
-- [x] JSON Schema-constrained output
-- [x] Retry + timeout
-- [x] Token/cost tracking
-- [x] Prompt version management
-- [x] Evidence content_ids in output
-- [x] Output source validation (no hallucinated video IDs)
-
-### Semantic Analysis (P4-16→22)
-- [x] English title → Chinese translation
-- [x] Trend Chinese naming
-- [x] "Why trending" summary
-- [x] Creative angle generation (1-4 per trend)
-- [x] Short/Long/Both classification
-- [x] Historical angle dedup (semantic)
-- [x] Low-confidence fallback
-
-## Notes
-- LLM API key: LLM_API_KEY in .env (OpenAI-compatible, default gpt-4o-mini)
-- LLM must NOT compute scores, only do language/semantic tasks
-- All LLM output must reference evidence video IDs
-- Prompt templates in config/prompts/
-- Semantic analysis runs after trend scoring; LLM failures do not block scoring
+- [x] Today's candidates page (grouped by trend, filterable)
+- [x] Trend detail page (timeline, scores, videos, evidence)
+- [x] Watchlist page (CSV import UI, edit, status) — Stage 2, CSRF added
+- [x] History page (by date, selected/published/reusable/blocked)
+- [x] Brief preview & export (Markdown + HTML)
+- [x] Candidate selection (checkboxes), manager notes
+- [x] Order adjustment for export
+- [x] Single-manager auth + CSRF protection
+- [x] CreativeAngle status machine + audit trail (Stage 6 core)
 
 ## Next
-Stage 5: Management UI and brief export
+Stage 6 remaining: recommendation history filtering before generation, publication link form on history page.

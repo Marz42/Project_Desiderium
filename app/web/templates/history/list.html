@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}历史记录 — Desiderium{% endblock %}
+{% block content %}
+<div class="mb-6">
+  <h2 class="text-2xl font-semibold">历史记录</h2>
+</div>
+
+<form method="get" class="flex flex-wrap gap-3 mb-6 p-4 bg-slate-900 border border-slate-800 rounded-xl">
+  <div>
+    <label class="text-xs text-slate-400">日期</label>
+    <select name="d" class="block mt-1 px-2 py-2 rounded bg-slate-950 border border-slate-700 text-sm">
+      {% for d in available_dates %}
+      <option value="{{ d.isoformat() }}" {% if d == date %}selected{% endif %}>{{ d.isoformat() }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <label class="text-xs text-slate-400">状态</label>
+    <select name="status" class="block mt-1 px-2 py-2 rounded bg-slate-950 border border-slate-700 text-sm">
+      <option value="">全部</option>
+      <option value="selected" {% if status_filter == 'selected' %}selected{% endif %}>已入选</option>
+      <option value="adopted" {% if status_filter == 'adopted' %}selected{% endif %}>已采用</option>
+      <option value="published" {% if status_filter == 'published' %}selected{% endif %}>已发布</option>
+      <option value="reusable" {% if status_filter == 'reusable' %}selected{% endif %}>可复用</option>
+      <option value="blocked" {% if status_filter == 'blocked' %}selected{% endif %}>不再推荐</option>
+    </select>
+  </div>
+  <div class="flex items-end">
+    <button type="submit" class="px-4 py-2 rounded bg-slate-800 hover:bg-slate-700 text-sm">查询</button>
+  </div>
+</form>
+
+{% if not entries %}
+<p class="text-slate-400 text-center py-12">该日期无记录</p>
+{% else %}
+<div class="space-y-3">
+  {% for entry in entries %}
+  {% set angle = entry.angle %}
+  {% set trend = entry.trend %}
+  <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+    <div class="flex flex-wrap items-center gap-2 mb-1">
+      <span class="text-xs text-slate-500">#{{ entry.daily.rank }}</span>
+      {% if entry.daily.selected %}<span class="text-xs px-2 py-0.5 rounded bg-blue-950 text-blue-300">入选</span>{% endif %}
+      <span class="text-xs px-2 py-0.5 rounded bg-slate-800">{{ angle.status.value }}</span>
+    </div>
+    <p class="font-medium">{{ angle.angle_zh }}</p>
+    {% if trend %}
+    <p class="text-sm text-slate-400 mt-1">趋势：{{ trend.canonical_name }}</p>
+    {% endif %}
+    {% if angle.manager_note %}
+    <p class="text-sm text-slate-300 mt-2">备注：{{ angle.manager_note }}</p>
+    {% endif %}
+    {% if entry.publication and entry.publication.published_url %}
+    <p class="text-sm mt-2">
+      <a href="{{ entry.publication.published_url }}" target="_blank" class="text-blue-400 hover:underline">发布链接</a>
+    </p>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

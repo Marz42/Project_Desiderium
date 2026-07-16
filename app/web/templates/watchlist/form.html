@@ -8,6 +8,7 @@
 
 <div class="card" style="max-width:640px">
   <form method="post" action="{{ '/watchlist/' + item.id if item else '/watchlist' }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token or '' }}">
     <div class="form-row">
       <div>
         <label for="type">类型</label>

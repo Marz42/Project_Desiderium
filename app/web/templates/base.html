@@ -4,111 +4,39 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Desiderium{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  <script>
+    document.addEventListener('htmx:configRequest', function(evt) {
+      const token = document.body.dataset.csrf;
+      if (token) evt.detail.headers['X-CSRF-Token'] = token;
+    });
+  </script>
   <style>
-    :root {
-      --bg: #0f1419;
-      --surface: #1a2332;
-      --border: #2d3a4f;
-      --text: #e7ecf3;
-      --muted: #8b9cb3;
-      --accent: #3b82f6;
-      --success: #22c55e;
-      --warning: #f59e0b;
-      --danger: #ef4444;
-    }
-    * { box-sizing: border-box; }
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      margin: 0;
-      line-height: 1.5;
-    }
-    header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 1rem 1.5rem;
-      display: flex;
-      align-items: center;
-      gap: 2rem;
-    }
-    header h1 { margin: 0; font-size: 1.25rem; }
-    header nav a {
-      color: var(--muted);
-      text-decoration: none;
-      margin-right: 1rem;
-    }
-    header nav a:hover, header nav a.active { color: var(--accent); }
-    main { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1.25rem;
-      margin-bottom: 1rem;
-    }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 0.6rem 0.75rem; text-align: left; border-bottom: 1px solid var(--border); }
-    th { color: var(--muted); font-weight: 500; font-size: 0.85rem; }
-    .badge {
-      display: inline-block;
-      padding: 0.15rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 500;
-    }
-    .badge-priority { background: #1e3a5f; color: #60a5fa; }
-    .badge-general { background: #1f2937; color: #9ca3af; }
-    .badge-experimental { background: #3b2f1a; color: #fbbf24; }
-    .badge-success { background: #14532d; color: var(--success); }
-    .badge-failed { background: #450a0a; color: var(--danger); }
-    .badge-partial { background: #422006; color: var(--warning); }
-    .btn {
-      display: inline-block;
-      padding: 0.4rem 0.9rem;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
-      text-decoration: none;
-      cursor: pointer;
-      font-size: 0.875rem;
-    }
-    .btn:hover { border-color: var(--accent); }
-    .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-    .btn-danger { border-color: var(--danger); color: var(--danger); }
-    .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.8rem; }
-    .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-    .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-    .flash { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; }
-    .flash-success { background: #14532d; border: 1px solid var(--success); }
-    .flash-error { background: #450a0a; border: 1px solid var(--danger); }
-    label { display: block; margin-bottom: 0.25rem; color: var(--muted); font-size: 0.875rem; }
-    input, select, textarea {
-      width: 100%;
-      padding: 0.5rem 0.75rem;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: var(--bg);
-      color: var(--text);
-      margin-bottom: 1rem;
-    }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    .muted { color: var(--muted); font-size: 0.875rem; }
-    .disabled { opacity: 0.5; }
+    body { font-family: system-ui, -apple-system, sans-serif; }
   </style>
 </head>
-<body>
-  <header>
-    <h1>Desiderium</h1>
-    <nav>
-      <a href="/watchlist" class="{% if active_nav == 'watchlist' %}active{% endif %}">监控列表</a>
-    </nav>
+<body class="bg-slate-950 text-slate-100 min-h-screen" data-csrf="{{ csrf_token or '' }}">
+  <header class="bg-slate-900 border-b border-slate-800">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center gap-6 flex-wrap">
+      <h1 class="text-lg font-semibold text-white">Desiderium</h1>
+      <nav class="flex gap-4 text-sm">
+        <a href="/candidates" class="{% if active_nav == 'candidates' %}text-blue-400{% else %}text-slate-400 hover:text-white{% endif %}">今日候选</a>
+        <a href="/brief" class="{% if active_nav == 'brief' %}text-blue-400{% else %}text-slate-400 hover:text-white{% endif %}">简报预览</a>
+        <a href="/history" class="{% if active_nav == 'history' %}text-blue-400{% else %}text-slate-400 hover:text-white{% endif %}">历史记录</a>
+        <a href="/watchlist" class="{% if active_nav == 'watchlist' %}text-blue-400{% else %}text-slate-400 hover:text-white{% endif %}">监控列表</a>
+      </nav>
+      <form method="post" action="/logout" class="ml-auto">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token or '' }}">
+        <button type="submit" class="text-sm text-slate-400 hover:text-white">退出</button>
+      </form>
+    </div>
   </header>
-  <main>
+  <main class="max-w-6xl mx-auto px-4 py-6">
     {% if flash_message %}
-    <div class="flash flash-{{ flash_type or 'success' }}">{{ flash_message }}</div>
+    <div class="mb-4 px-4 py-3 rounded-lg border {% if flash_type == 'error' %}bg-red-950 border-red-800 text-red-200{% else %}bg-emerald-950 border-emerald-800 text-emerald-200{% endif %}">
+      {{ flash_message }}
+    </div>
     {% endif %}
     {% block content %}{% endblock %}
   </main>

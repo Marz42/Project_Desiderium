@@ -95,3 +95,10 @@ class ContentRepository:
             (now - item.first_seen_at).total_seconds() < 1
         )
         return item, is_new
+
+    async def get_by_ids(self, ids: list[uuid.UUID]) -> dict[uuid.UUID, ContentItem]:
+        if not ids:
+            return {}
+        stmt = select(ContentItem).where(ContentItem.id.in_(ids))
+        items = (await self._session.scalars(stmt)).all()
+        return {item.id: item for item in items}

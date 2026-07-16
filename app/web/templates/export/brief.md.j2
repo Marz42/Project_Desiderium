@@ -1,0 +1,54 @@
+# 今日番剧解说趋势简报
+
+生成日期：{{ brief_date.isoformat() }}
+覆盖范围：最近24小时新内容、72小时短期趋势、7天持续趋势
+
+{% for section in sections %}
+{% set trend = section.trend %}
+## {{ loop.index }}. {{ trend.canonical_name }}
+
+状态：{{ lifecycle_labels.get(trend.lifecycle_status.value, trend.lifecycle_status.value) }}
+适合形式：{% for row in section.angles %}{{ format_labels.get(row.angle.format, row.angle.format.value) }}{% if not loop.last %} / {% endif %}{% endfor %}
+综合热度：{{ '%.0f'|format(trend.score or 0) }}/100
+
+### 热度依据
+
+{% if trend.score_components %}
+{% for key, val in trend.score_components.items() %}
+- {{ key }}: {{ '%.1f'|format(val) if val is number else val }}
+{% endfor %}
+{% else %}
+（暂无分项评分明细）
+{% endif %}
+
+### 为什么热门
+
+{{ section.why_trending or trend.summary_zh or '（暂无说明）' }}
+
+### 代表视频
+
+{% for v in section.evidence_videos %}
+{{ loop.index }}. {{ v.title_original }}
+   {{ v.title_zh or '' }}
+   {{ v.channel_name or '—' }}｜{{ v.published_at.strftime('%Y-%m-%d') if v.published_at else '—' }}｜{{ v.url or '' }}
+
+{% else %}
+（暂无代表视频）
+{% endfor %}
+
+### 建议创作方向
+
+{% for row in section.angles %}
+{{ loop.index }}. {{ row.angle.angle_zh }} — {{ format_labels.get(row.angle.format, row.angle.format.value) }}
+{% endfor %}
+
+{% set notes = section.angles | selectattr('manager_note') | list %}
+{% if notes %}
+### 管理者备注
+
+{% for row in notes %}
+- {{ row.angle.angle_zh }}: {{ row.manager_note }}
+{% endfor %}
+{% endif %}
+
+{% endfor %}

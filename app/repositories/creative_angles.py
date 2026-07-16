@@ -44,6 +44,33 @@ class CreativeAngleRepository:
         )
         return list((await self._session.scalars(stmt)).all())
 
+    async def get_by_id(self, angle_id: uuid.UUID) -> CreativeAngle | None:
+        return await self._session.get(CreativeAngle, angle_id)
+
+    async def update_status(self, angle_id: uuid.UUID, status: AngleStatus) -> CreativeAngle | None:
+        angle = await self.get_by_id(angle_id)
+        if angle is None:
+            return None
+        angle.status = status
+        await self._session.flush()
+        return angle
+
+    async def update_note(self, angle_id: uuid.UUID, note: str | None) -> CreativeAngle | None:
+        angle = await self.get_by_id(angle_id)
+        if angle is None:
+            return None
+        angle.manager_note = note
+        await self._session.flush()
+        return angle
+
+    async def list_for_date(self, generated_date: date) -> list[CreativeAngle]:
+        stmt = (
+            select(CreativeAngle)
+            .where(CreativeAngle.generated_date == generated_date)
+            .order_by(CreativeAngle.created_at)
+        )
+        return list((await self._session.scalars(stmt)).all())
+
     async def create_angle(
         self,
         *,

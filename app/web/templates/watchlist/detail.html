@@ -5,6 +5,7 @@
   <h2 style="margin:0">{{ item.name }}</h2>
   <div class="actions">
     <form method="post" action="/watchlist/{{ item.id }}/crawl">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token or '' }}">
       <button type="submit" class="btn btn-primary" {% if not item.enabled %}disabled{% endif %}>立即抓取</button>
     </form>
     <a href="/watchlist/{{ item.id }}/edit" class="btn">编辑</a>
@@ -56,6 +57,7 @@
 {% endif %}
 
 <form method="post" action="/watchlist/{{ item.id }}/delete" onsubmit="return confirm('确认删除？')">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token or '' }}">
   <button type="submit" class="btn btn-danger">删除监控项</button>
 </form>
 {% endblock %}

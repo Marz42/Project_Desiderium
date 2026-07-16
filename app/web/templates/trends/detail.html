@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}{{ trend.canonical_name }} — Desiderium{% endblock %}
+{% block content %}
+<div class="mb-6">
+  <a href="/candidates" class="text-sm text-slate-400 hover:text-white">← 返回候选</a>
+  <h2 class="text-2xl font-semibold mt-2">{{ trend.canonical_name }}</h2>
+  <div class="flex flex-wrap gap-2 mt-2 text-sm text-slate-400">
+    <span class="px-2 py-0.5 rounded bg-slate-800">{{ trend.lifecycle_status.value }}</span>
+    {% if trend.anime_title %}<span>{{ trend.anime_title }}</span>{% endif %}
+    <span>综合热度 {{ '%.0f'|format(trend.score or 0) }}</span>
+  </div>
+  {% if trend.summary_zh %}
+  <p class="mt-3 text-slate-300">{{ trend.summary_zh }}</p>
+  {% endif %}
+</div>
+
+<div class="grid md:grid-cols-2 gap-4 mb-6">
+  <section class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+    <h3 class="font-medium mb-3">评分时间线</h3>
+    {% if not timeline %}
+    <p class="text-slate-500 text-sm">暂无历史快照</p>
+    {% else %}
+    <div class="space-y-2 text-sm">
+      {% for point in timeline %}
+      <div class="flex justify-between border-b border-slate-800 pb-1">
+        <span>{{ point.date.isoformat() }}</span>
+        <span>{{ '%.0f'|format(point.score) }} · {{ point.lifecycle_status }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </section>
+  <section class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+    <h3 class="font-medium mb-3">分项评分</h3>
+    {% if score_components %}
+    <dl class="grid grid-cols-2 gap-2 text-sm">
+      {% for key, val in score_components.items() %}
+      <dt class="text-slate-400">{{ key }}</dt>
+      <dd>{{ '%.1f'|format(val) if val is number else val }}</dd>
+      {% endfor %}
+    </dl>
+    {% else %}
+    <p class="text-slate-500 text-sm">暂无分项数据</p>
+    {% endif %}
+  </section>
+</div>
+
+<section class="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-6">
+  <h3 class="font-medium mb-3">频道分布</h3>
+  <div class="flex flex-wrap gap-2">
+    {% for row in channel_distribution %}
+    <span class="text-sm px-2 py-1 rounded bg-slate-800">{{ row.channel }} ({{ row.count }})</span>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-6">
+  <h3 class="font-medium mb-3">成员视频</h3>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="text-slate-400 border-b border-slate-800">
+        <tr>
+          <th class="text-left py-2">标题</th>
+          <th class="text-left py-2">频道</th>
+          <th class="text-left py-2">播放量</th>
+          <th class="text-left py-2">加入时间</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in members %}
+        <tr class="border-b border-slate-800/50">
+          <td class="py-2 pr-2">
+            <a href="{{ row.content.url }}" target="_blank" class="hover:text-blue-400">
+              {{ row.content.title_zh or row.content.title_original }}
+            </a>
+          </td>
+          <td class="py-2">{{ row.content.channel_name or '—' }}</td>
+          <td class="py-2">{{ row.latest_views or '—' }}</td>
+          <td class="py-2 text-slate-400">{{ row.member.added_at.strftime('%Y-%m-%d') if row.member.added_at else '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+  <h3 class="font-medium mb-3">历史创作方向</h3>
+  <ul class="space-y-2 text-sm">
+    {% for angle in angles %}
+    <li class="flex gap-2">
+      <span class="text-slate-500">{{ angle.generated_date.isoformat() }}</span>
+      <span>{{ angle.angle_zh }}</span>
+      <span class="text-slate-500">({{ angle.status.value }})</span>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

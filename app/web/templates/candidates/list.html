@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}今日候选 — Desiderium{% endblock %}
+{% block content %}
+<div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+  <div>
+    <h2 class="text-2xl font-semibold">今日候选</h2>
+    <p class="text-slate-400 text-sm mt-1">{{ date.isoformat() }} · 共 {{ total_count }} 个方向 · 已选 {{ selected_count }}</p>
+  </div>
+  <div class="flex gap-2">
+    <a href="/brief?d={{ date.isoformat() }}" class="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-sm">简报预览</a>
+  </div>
+</div>
+
+<form method="get" class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6 p-4 bg-slate-900 border border-slate-800 rounded-xl">
+  <input type="hidden" name="d" value="{{ date.isoformat() }}">
+  <div>
+    <label class="text-xs text-slate-400">生命周期</label>
+    <select name="lifecycle" class="w-full mt-1 px-2 py-2 rounded bg-slate-950 border border-slate-700 text-sm">
+      <option value="">全部</option>
+      <option value="new" {% if lifecycle == 'new' %}selected{% endif %}>新发现</option>
+      <option value="rising" {% if lifecycle == 'rising' %}selected{% endif %}>持续上升</option>
+      <option value="stable" {% if lifecycle == 'stable' %}selected{% endif %}>稳定</option>
+      <option value="declining" {% if lifecycle == 'declining' %}selected{% endif %}>下降</option>
+    </select>
+  </div>
+  <div>
+    <label class="text-xs text-slate-400">动漫作品</label>
+    <input name="anime" value="{{ anime_filter or '' }}" placeholder="作品名"
+           class="w-full mt-1 px-2 py-2 rounded bg-slate-950 border border-slate-700 text-sm">
+  </div>
+  <div>
+    <label class="text-xs text-slate-400">形式</label>
+    <select name="format" class="w-full mt-1 px-2 py-2 rounded bg-slate-950 border border-slate-700 text-sm">
+      <option value="">全部</option>
+      <option value="shorts" {% if format_filter == 'shorts' %}selected{% endif %}>Shorts</option>
+      <option value="long" {% if format_filter == 'long' %}selected{% endif %}>长视频</option>
+      <option value="both" {% if format_filter == 'both' %}selected{% endif %}>Both</option>
+    </select>
+  </div>
+  <div class="flex items-end">
+    <label class="flex items-center gap-2 text-sm text-slate-300">
+      <input type="checkbox" name="priority" value="1" {% if priority_filter == '1' %}checked{% endif %}>
+      重点频道
+    </label>
+  </div>
+  <div class="flex items-end">
+    <button type="submit" class="w-full py-2 rounded bg-slate-800 hover:bg-slate-700 text-sm">筛选</button>
+  </div>
+</form>
+
+{% if not trend_groups %}
+<div class="text-center py-16 text-slate-400">今日暂无候选。请确认 Worker 已运行语义分析任务。</div>
+{% endif %}
+
+{% for group in trend_groups %}
+{% set trend = group.trend %}
+<section class="mb-6 bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+  <div class="px-4 py-3 border-b border-slate-800 flex flex-wrap items-center gap-3">
+    <h3 class="font-semibold text-lg">
+      <a href="/trends/{{ trend.id }}" class="hover:text-blue-400">{{ trend.canonical_name }}</a>
+    </h3>
+    <span class="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300">{{ trend.lifecycle_status.value }}</span>
+    {% if trend.anime_title %}
+    <span class="text-xs text-slate-400">{{ trend.anime_title }}</span>
+    {% endif %}
+    <span class="text-xs text-amber-400 ml-auto">热度 {{ '%.0f'|format(trend.score or 0) }}</span>
+    {% if group.has_priority_evidence %}
+    <span class="text-xs px-2 py-0.5 rounded bg-blue-950 text-blue-300">重点频道</span>
+    {% endif %}
+  </div>
+  {% if trend.summary_zh %}
+  <p class="px-4 py-2 text-sm text-slate-300 border-b border-slate-800">{{ trend.summary_zh }}</p>
+  {% endif %}
+  <div class="divide-y divide-slate-800">
+    {% for cand in group.candidates %}
+    {% set daily = cand.daily %}
+    {% set angle = cand.angle %}
+    <div class="px-4 py-3 {% if daily.selected %}bg-blue-950/30{% endif %}">
+      <div class="flex flex-wrap items-start gap-3">
+        <form method="post" action="/candidates/{{ daily.id }}/toggle" class="pt-1">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <input type="checkbox" onchange="this.form.submit()" {% if daily.selected %}checked{% endif %}
+                 class="w-4 h-4 rounded border-slate-600">
+        </form>
+        <div class="flex-1 min-w-0">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs text-slate-500">#{{ daily.rank }}</span>
+            <p class="font-medium">{{ angle.angle_zh }}</p>
+            <span class="text-xs px-2 py-0.5 rounded bg-slate-800">{{ angle.format.value }}</span>
+            <span class="text-xs px-2 py-0.5 rounded
+              {% if angle.status.value == 'blocked' %}bg-red-950 text-red-300
+              {% elif angle.status.value == 'published' %}bg-emerald-950 text-emerald-300
+              {% else %}bg-slate-800 text-slate-300{% endif %}">{{ angle.status.value }}</span>
+          </div>
+          {% if cand.evidence_videos %}
+          <ul class="mt-2 text-xs text-slate-400 space-y-1">
+            {% for v in cand.evidence_videos %}
+            <li>
+              <a href="{{ v.url }}" target="_blank" class="hover:text-blue-400">{{ v.title_zh or v.title_original }}</a>
+              · {{ v.channel_name or '—' }}
+            </li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+          <form method="post" action="/candidates/angles/{{ angle.id }}/note" class="mt-2 flex gap-2">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="candidate_date" value="{{ date.isoformat() }}">
+            <input name="note" value="{{ angle.manager_note or '' }}" placeholder="管理者备注"
+                   class="flex-1 px-2 py-1 rounded bg-slate-950 border border-slate-700 text-sm">
+            <button type="submit" class="px-2 py-1 rounded bg-slate-800 text-xs hover:bg-slate-700">保存</button>
+          </form>
+        </div>
+        <div class="flex flex-wrap gap-1">
+          {% for st, label in [('adopted','采用'),('published','发布'),('reusable','可复用'),('blocked','屏蔽')] %}
+          <form method="post" action="/candidates/angles/{{ angle.id }}/status">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="status" value="{{ st }}">
+            <input type="hidden" name="candidate_date" value="{{ date.isoformat() }}">
+            <button type="submit" class="px-2 py-1 text-xs rounded border border-slate-700 hover:border-slate-500">{{ label }}</button>
+          </form>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endfor %}
+{% endblock %}
