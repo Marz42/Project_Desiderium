@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     crawl_general_hours: int = Field(default=18, alias="CRAWL_GENERAL_HOURS")
     crawl_keyword_hour: int = Field(default=6, alias="CRAWL_KEYWORD_HOUR")
     llm_api_key: str = Field(default="", alias="LLM_API_KEY")
+    llm_base_url: str = Field(default="", alias="LLM_BASE_URL")
+    llm_model: str = Field(default="", alias="LLM_MODEL")
     secret_key: str = Field(default="change-me-in-production", alias="SECRET_KEY")
 
     @property

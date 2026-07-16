@@ -1,0 +1,27 @@
+# LLM adapter configuration (provider-agnostic, OpenAI-compatible API).
+version: "1.0"
+
+llm:
+  base_url: "https://api.openai.com/v1"
+  model: "gpt-4o-mini"
+  timeout_seconds: 60
+  max_retries: 3
+  retry_backoff_seconds: 2.0
+  temperature: 0.3
+  max_output_tokens: 4096
+
+transcripts:
+  max_text_chars: 15000
+  excerpt_chars: 2000
+  summary_cache_ttl_seconds: 3600
+  preferred_languages:
+    - en
+    - en-US
+    - en-GB
+
+semantic:
+  max_angles_per_trend: 4
+  min_angles_per_trend: 1
+  dedup_similarity_threshold: 0.72
+  low_confidence_threshold: 0.45
+  max_evidence_videos_per_request: 12

@@ -1,0 +1,39 @@
+version: "1.0"
+name: format_classification
+description: Classify whether a creative angle suits Shorts, long-form, or both.
+
+system: |
+  Classify anime commentary angles by best video format.
+  short: under 60s hook-driven clips, single moment, reaction, or quick explainers.
+  long: deep dives, multi-scene analysis, full arc recaps needing 8+ minutes.
+  both: works as a tight Short teaser and expanded long video.
+  Use evidence video duration and style hints only. Do not invent metrics.
+
+user_template: |
+  Trend: {{trend_name_zh}}
+  Angle: {{angle_zh}}
+
+  Evidence videos:
+  {{evidence_videos_json}}
+
+output_schema:
+  type: object
+  additionalProperties: false
+  required:
+    - format
+    - evidence_content_ids
+    - rationale_zh
+  properties:
+    format:
+      type: string
+      enum:
+        - short
+        - long
+        - both
+    evidence_content_ids:
+      type: array
+      items:
+        type: string
+      minItems: 1
+    rationale_zh:
+      type: string

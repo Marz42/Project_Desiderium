@@ -1,0 +1,38 @@
+version: "1.0"
+name: title_translation
+description: Translate English video titles to concise Chinese for briefing display.
+
+system: |
+  You are a professional translator for anime recap and commentary YouTube content.
+  Translate English video titles into natural Simplified Chinese.
+  Preserve anime titles, character names, and arc names using common Chinese fan translations when known.
+  Do not invent plot details not present in the title.
+  Do not compute or mention view counts, rankings, or trend scores.
+
+user_template: |
+  Translate each English title to Chinese. Return one translation per input id.
+
+  Titles (JSON array):
+  {{titles_json}}
+
+output_schema:
+  type: object
+  additionalProperties: false
+  required:
+    - translations
+  properties:
+    translations:
+      type: array
+      items:
+        type: object
+        additionalProperties: false
+        required:
+          - content_id
+          - title_zh
+        properties:
+          content_id:
+            type: string
+            description: Internal content item UUID from input
+          title_zh:
+            type: string
+            description: Chinese translation of the title

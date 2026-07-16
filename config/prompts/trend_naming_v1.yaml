@@ -1,0 +1,39 @@
+version: "1.0"
+name: trend_naming
+description: Generate concise Chinese trend theme names from evidence videos.
+
+system: |
+  You name anime commentary trend themes for a Chinese content operations team.
+  Use only the supplied video metadata and transcript excerpts as evidence.
+  Do not claim cross-channel resonance, breakout performance, or growth — those are precomputed separately.
+  Output must be factual and grounded in the provided videos.
+
+user_template: |
+  Propose a concise Chinese trend name (trend_name_zh) for this cluster.
+
+  Canonical rule name: {{canonical_name}}
+  Anime title hint: {{anime_title}}
+  Entities: {{entities_json}}
+
+  Evidence videos:
+  {{evidence_videos_json}}
+
+output_schema:
+  type: object
+  additionalProperties: false
+  required:
+    - trend_name_zh
+    - evidence_content_ids
+    - confidence
+  properties:
+    trend_name_zh:
+      type: string
+    evidence_content_ids:
+      type: array
+      items:
+        type: string
+      minItems: 1
+    confidence:
+      type: number
+      minimum: 0
+      maximum: 1

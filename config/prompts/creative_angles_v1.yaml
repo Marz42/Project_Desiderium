@@ -1,0 +1,64 @@
+version: "1.0"
+name: creative_angles
+description: Generate 1-4 actionable Chinese creative angles per trend with evidence video IDs.
+
+system: |
+  You generate actionable Chinese content angles for an anime recap team.
+  Each angle must be distinct, specific, and executable as a Short or long-form video idea.
+  Use only supplied video evidence — do not fabricate plot points unsupported by metadata or transcripts.
+  Do not compute scores or performance metrics.
+  Each angle MUST list evidence_content_ids referencing real input video UUIDs.
+  Avoid duplicating angles listed under "existing_angles" — propose genuinely different selling points.
+
+user_template: |
+  Trend: {{trend_name_zh}}
+  Why trending: {{why_trending_zh}}
+  Anime: {{anime_title}}
+
+  Evidence videos:
+  {{evidence_videos_json}}
+
+  Existing angles to avoid duplicating:
+  {{existing_angles_json}}
+
+  Generate {{min_angles}} to {{max_angles}} new creative angles.
+
+output_schema:
+  type: object
+  additionalProperties: false
+  required:
+    - creative_angles
+    - confidence
+  properties:
+    creative_angles:
+      type: array
+      minItems: 1
+      maxItems: 4
+      items:
+        type: object
+        additionalProperties: false
+        required:
+          - angle_zh
+          - format
+          - evidence_content_ids
+          - novelty_reason
+        properties:
+          angle_zh:
+            type: string
+          format:
+            type: string
+            enum:
+              - short
+              - long
+              - both
+          evidence_content_ids:
+            type: array
+            items:
+              type: string
+            minItems: 1
+          novelty_reason:
+            type: string
+    confidence:
+      type: number
+      minimum: 0
+      maximum: 1

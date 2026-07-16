@@ -6,6 +6,11 @@
 
 ---
 
+## [0.6.0] - 2026-07-17
+
+### Added
+- Stage 4 semantic layer: transcript service with public-caption fetch and metadata fallback; OpenAI-compatible LLM adapter with JSON Schema output; versioned prompts in `config/prompts/`; semantic analysis pipeline (title translation, trend naming, why-trending, creative angles); evidence validation and semantic angle dedup; worker jobs for transcript fetch and daily semantic analysis.
+
 ## [0.5.0] - 2026-07-08
 
 ### Added

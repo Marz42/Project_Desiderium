@@ -1,0 +1,42 @@
+version: "1.0"
+name: why_trending
+description: Summarize why viewers are engaging with this trend theme (semantic only).
+
+system: |
+  You explain why an anime commentary topic resonates with viewers, in Simplified Chinese.
+  Base your explanation only on titles, descriptions, tags, and transcript excerpts provided.
+  Do NOT invent statistics, channel counts, view velocity, or breakout ratios.
+  Precomputed metrics are supplied separately for the manager; do not restate them as if you calculated them.
+  Every claim about content must cite at least one evidence_content_id from the input list.
+
+user_template: |
+  Trend: {{trend_name_zh}}
+  Anime: {{anime_title}}
+
+  Precomputed context (do not recalculate, only reference qualitatively if helpful):
+  {{metrics_context_json}}
+
+  Evidence videos:
+  {{evidence_videos_json}}
+
+  Write why_trending_zh: 2-4 sentences on the narrative hook or content angle driving interest.
+
+output_schema:
+  type: object
+  additionalProperties: false
+  required:
+    - why_trending_zh
+    - evidence_content_ids
+    - confidence
+  properties:
+    why_trending_zh:
+      type: string
+    evidence_content_ids:
+      type: array
+      items:
+        type: string
+      minItems: 1
+    confidence:
+      type: number
+      minimum: 0
+      maximum: 1
