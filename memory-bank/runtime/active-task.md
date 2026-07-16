@@ -1,57 +1,38 @@
----
-type: paradigma-runtime-state
-title: Active Task
-description: Current active task state for the Agent session.
-tags: [runtime, active-task]
-timestamp: 2026-07-05T12:43:00+08:00
-paradigma:
-  layer: runtime
-  temperature: hot
-  lifecycle: ephemeral
-  okf_export: false
-  update_policy: agent-editable
-  archive_to: /memory-bank/logs/progress/
----
+# Active Task: Stage 0 — Engineering Baseline
 
-# Active Task
+**Plan:** knowledge/plans/mvp-plan.md (Section: 阶段0)
+**Status:** completed
+**Started:** 2026-07-17
+**Completed:** 2026-07-17
+**Cursor Mode:** auto
 
-## Task ID
+## Objective
 
-2026-07-05-protocol-sync
+Establish a runnable, testable, deployable project skeleton as the foundation for all subsequent stages.
 
-## User Request
+## Required Deliverables (from plan.md Stage 0)
 
-对 AGENT_RULES 和 INIT_PROMPT 进行全量回归模拟，修复所有协议同步问题。
+- [x] P0-01: Python project with dependency management
+- [x] P0-02: FastAPI application skeleton
+- [x] P0-03: PostgreSQL + SQLAlchemy setup
+- [x] P0-04: Alembic migrations
+- [x] P0-05: Docker Compose (web, worker, postgres)
+- [x] P0-06: Config management + .env template
+- [x] P0-07: Structured logging
+- [x] P0-08: pytest test directory
+- [x] P0-09: Adapter + Domain interfaces (SourceAdapter, TranscriptAdapter)
+- [x] P0-10: Database task table (crawl_jobs)
 
-## Current Status
+## Acceptance Gate
 
-Completed.
-
-## Checklist
-
-- [x] 读取 AGENT_RULES.md、INIT_PROMPT.md、README.md 全量规范
-- [x] 逐条比对所有协议路径、命令引用、版本号
-- [x] C1: README.md 版本号 0.4.0 → 0.4.2
-- [x] C2: glossary.template.md 时间戳 2026-07-04 → YYYY-MM-DDTHH:mm:ssZ
-- [x] P1-P2: README.md 两处 4 条单独命令 → pd-check-all.py + pd-sync-index.py --write
-- [x] R1: README.md 目录树补充 pd-check-all.py 和 .github/workflows/check.yml
-- [x] P3-P6: INIT_PROMPT.md 模式F/A/C 和自定义提示 → pd-check-all.py
-- [x] P7: paradigma-deploy.md Verification → pd-check-all.py
-- [x] D1: cursor rule 删除多余的独立 pd-sync-index.py --check 行
-- [x] 运行 pd-check-all.py 全部 4 checks passed
-- [x] 版本保持 0.4.2（本次为文档同步，不涉及功能或协议变更）
-
-## Relevant Knowledge
-
-- /AGENT_RULES.md
-- /INIT_PROMPT.md
-- /memory-bank/knowledge/contracts/repository-contract.md
-- /memory-bank/knowledge/conventions.md
-
-## Blockers
-
-None.
+```bash
+docker compose up  # all services start
+GET /health/live   # 200 OK
+GET /health/ready  # 200 OK
+```
 
 ## Notes
 
-本次为纯协议同步：README、INIT_PROMPT、cursor rule、paradigma-deploy.md 统一将 Update Phase 的 4 条单独命令替换为 pd-check-all.py。glossary.template.md 修复了一个 C2 级 bug（模板带真实时间戳会导致衍生项目 strict lint 失败）。版本保持 0.4.2，无功能或协议变更。
+- Stack: Python 3.12, FastAPI, Jinja2+HTMX, PostgreSQL, SQLAlchemy 2 async, Alembic, httpx, Pydantic, pytest, Docker
+- Commit: `Stage 0: Engineering baseline`
+- Next: Stage 1 shadow validation (see mvp-plan.md)

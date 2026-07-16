@@ -1,4 +1,32 @@
-# Project Paradigma
+# Project Desiderium
+
+*Anime trend intelligence system — built on Paradigma Memory-Bank*
+
+## Quick Start (Application)
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+Health checks:
+
+- `GET http://localhost:8000/health/live` — liveness
+- `GET http://localhost:8000/health/ready` — readiness (includes PostgreSQL)
+
+Local development without Docker:
+
+```bash
+pip install -e .
+pytest
+uvicorn app.main:app --reload
+```
+
+Stack: Python 3.12, FastAPI, PostgreSQL 16, SQLAlchemy 2 async, Alembic, APScheduler, Docker Compose.
+
+---
+
+# Paradigma Framework
 
 *OKF-compatible Agent Memory Runtime Framework*
 
