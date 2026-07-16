@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -22,7 +22,10 @@ class Settings(BaseSettings):
         alias="DATABASE_URL",
     )
 
-    youtube_api_key: str = Field(default="", alias="YOUTUBE_API_KEY")
+    youtube_api_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("YOUTUBE_DATA_API_KEY", "YOUTUBE_API_KEY"),
+    )
     llm_api_key: str = Field(default="", alias="LLM_API_KEY")
     secret_key: str = Field(default="change-me-in-production", alias="SECRET_KEY")
 

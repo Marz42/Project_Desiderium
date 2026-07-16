@@ -1,0 +1,159 @@
+{
+  "labeler": "manager_shadow_review",
+  "labeled_at": "2026-07-17",
+  "notes": "Trend groups assigned by keyword matching on English titles, then manually reviewed for manager value labels.",
+  "trends": [
+    {
+      "trend_id": "trend_solo_leveling",
+      "name": "Solo Leveling Season 2 / Jinwoo Arc",
+      "anime_title": "Solo Leveling",
+      "keywords": ["solo leveling", "sung jinwoo", "jinwoo", "shadow monarch"],
+      "manager_value": "high",
+      "manager_note": "Multiple recap channels following latest SL content; strong cross-channel resonance expected."
+    },
+    {
+      "trend_id": "trend_jjk",
+      "name": "Jujutsu Kaisen Current Arc",
+      "anime_title": "Jujutsu Kaisen",
+      "keywords": ["jujutsu kaisen", "jjk", "gojo", "sukuna", " yuta"],
+      "manager_value": "high",
+      "manager_note": "Evergreen high-volume topic; breakout depends on episode timing."
+    },
+    {
+      "trend_id": "trend_one_piece",
+      "name": "One Piece Egghead / Recent Arc",
+      "anime_title": "One Piece",
+      "keywords": ["one piece", "luffy", "egghead", "gorosei", "kuma"],
+      "manager_value": "high",
+      "manager_note": "Large channels post routinely; algorithm should not over-rank single large-channel uploads."
+    },
+    {
+      "trend_id": "trend_demon_slayer",
+      "name": "Demon Slayer Hashira / Infinity Castle",
+      "anime_title": "Demon Slayer",
+      "keywords": ["demon slayer", "kimetsu", "tanjiro", "hashira", "infinity castle", "nezuko"],
+      "manager_value": "high",
+      "manager_note": "Major franchise; resonance plus relative breakout distinguishes real trends."
+    },
+    {
+      "trend_id": "trend_bleach",
+      "name": "Bleach / Soul Reaper Arc",
+      "anime_title": "Bleach",
+      "keywords": ["bleach", "soul reaper", "ichigo", "soul society"],
+      "manager_value": "high",
+      "manager_note": "Soul Reaper content spike across recap channels."
+    },
+    {
+      "trend_id": "trend_boruto",
+      "name": "Boruto / Naruto Next Generation",
+      "anime_title": "Boruto",
+      "keywords": ["boruto", "naruto", "kawaki", "otsutsuki"],
+      "manager_value": "normal",
+      "manager_note": "Legacy franchise steady recaps."
+    },
+    {
+      "trend_id": "trend_isekai_reborn",
+      "name": "Isekai Reincarnation Power Fantasy",
+      "anime_title": "",
+      "keywords": ["reborn", "reincarnation", "weakest class", "awakens", "villager class", "accidently awakens"],
+      "manager_value": "normal",
+      "manager_note": "Common recap trope; moderate value unless multi-channel spike."
+    },
+    {
+      "trend_id": "trend_hindi_recap",
+      "name": "Hindi Language Recap (non-target)",
+      "anime_title": "",
+      "keywords": ["hindi", "in hindi", "हिंदी"],
+      "manager_value": "low",
+      "manager_note": "Counter-example: non-English target audience content."
+    },
+    {
+      "trend_id": "trend_chainsaw_man",
+      "name": "Chainsaw Man Season 2 / Reze Arc",
+      "anime_title": "Chainsaw Man",
+      "keywords": ["chainsaw man", "denji", "reze", "pochita"],
+      "manager_value": "high",
+      "manager_note": "High interest when multiple channels cover same arc within 72h."
+    },
+    {
+      "trend_id": "trend_dandadan",
+      "name": "Dandadan Supernatural Battles",
+      "anime_title": "Dandadan",
+      "keywords": ["dandadan", "danda dan", "okarun", "momo"],
+      "manager_value": "high",
+      "manager_note": "Rising title with strong shorts potential."
+    },
+    {
+      "trend_id": "trend_frieren",
+      "name": "Frieren Emotional Arc Moments",
+      "anime_title": "Frieren",
+      "keywords": ["frieren", "himmel", "stark", "fern"],
+      "manager_value": "normal",
+      "manager_note": "Steady performer but lower urgency unless multi-channel spike."
+    },
+    {
+      "trend_id": "trend_kaiju8",
+      "name": "Kaiju No. 8 Action Highlights",
+      "anime_title": "Kaiju No. 8",
+      "keywords": ["kaiju no. 8", "kaiju no 8", "kafka", "kaiju 8"],
+      "manager_value": "normal",
+      "manager_note": "Good for action shorts when breakout ratio is high."
+    },
+    {
+      "trend_id": "trend_blue_lock",
+      "name": "Blue Lock Sports Highlights",
+      "anime_title": "Blue Lock",
+      "keywords": ["blue lock", "isagi", "nagi", "bachira"],
+      "manager_value": "normal",
+      "manager_note": "Niche sports anime audience; moderate priority."
+    },
+    {
+      "trend_id": "trend_rezero",
+      "name": "Re:Zero Arc Developments",
+      "anime_title": "Re:Zero",
+      "keywords": ["re:zero", "re zero", "subaru", "emilia"],
+      "manager_value": "normal",
+      "manager_note": "Spikes around new episode drops."
+    },
+    {
+      "trend_id": "trend_mha",
+      "name": "My Hero Academia Final Saga",
+      "anime_title": "My Hero Academia",
+      "keywords": ["my hero academia", "mha", "deku", "all might", "hero academia"],
+      "manager_value": "normal",
+      "manager_note": "Legacy franchise; watch for coordinated arc recaps."
+    },
+    {
+      "trend_id": "trend_black_clover",
+      "name": "Black Clover Return Hype",
+      "anime_title": "Black Clover",
+      "keywords": ["black clover", "asta", "yuno"],
+      "manager_value": "high",
+      "manager_note": "Return announcements create cross-channel bursts."
+    },
+    {
+      "trend_id": "trend_generic_recap",
+      "name": "Generic Multi-Arc Compilation",
+      "anime_title": "",
+      "keywords": ["top 10 anime", "best anime", "anime recap 2025", "anime recap 2026", "every anime"],
+      "manager_value": "low",
+      "manager_note": "Counter-example: listicles and generic compilations should rank lower."
+    },
+    {
+      "trend_id": "trend_manhwa_crossover",
+      "name": "Manhwa/Webtoon Recap Crossover",
+      "anime_title": "",
+      "keywords": ["manhwa", "webtoon", "manhua", "solo max level", "omniscient reader"],
+      "manager_value": "low",
+      "manager_note": "Counter-example: adjacent niche, lower manager priority for anime team."
+    },
+    {
+      "trend_id": "trend_unlabeled",
+      "name": "Unclustered / Other",
+      "anime_title": "",
+      "keywords": [],
+      "manager_value": "normal",
+      "manager_note": "Default bucket for videos not matching known trend keywords."
+    }
+  ]
+}

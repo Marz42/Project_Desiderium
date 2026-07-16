@@ -1,38 +1,50 @@
-# Active Task: Stage 0 — Engineering Baseline
+# Active Task: Stage 1 — Shadow Validation & Golden Dataset
 
-**Plan:** knowledge/plans/mvp-plan.md (Section: 阶段0)
+**Plan:** knowledge/plans/mvp-plan.md (Section: 阶段1)
 **Status:** completed
 **Started:** 2026-07-17
-**Completed:** 2026-07-17
+**Completed:** 2026-07-17 01:39
+**Depends on:** Stage 0 ✓
 **Cursor Mode:** auto
 
 ## Objective
 
-Establish a runnable, testable, deployable project skeleton as the foundation for all subsequent stages.
+Before building the full backend, prove that "cross-channel resonance × relative channel performance" can reproduce the manager's judgment. Build a minimal YouTube scraper, compute BreakoutRatio, manually label trends, and validate scoring against human judgment.
 
-## Required Deliverables (from plan.md Stage 0)
+## Deliverables Checklist
 
-- [x] P0-01: Python project with dependency management
-- [x] P0-02: FastAPI application skeleton
-- [x] P0-03: PostgreSQL + SQLAlchemy setup
-- [x] P0-04: Alembic migrations
-- [x] P0-05: Docker Compose (web, worker, postgres)
-- [x] P0-06: Config management + .env template
-- [x] P0-07: Structured logging
-- [x] P0-08: pytest test directory
-- [x] P0-09: Adapter + Domain interfaces (SourceAdapter, TranscriptAdapter)
-- [x] P0-10: Database task table (crawl_jobs)
+- [x] P1-01: Compile 20-30 priority YouTube channels (28 verified anime recap channels)
+- [x] P1-02: Compile general channels, keywords, anime titles (watchlist.csv)
+- [x] P1-03: Minimal YouTube scraping script (scripts/shadow/youtube_client.py)
+- [x] P1-04: Fetch recent videos + current stats (389 videos, 79 channels)
+- [x] P1-05: Simplified age buckets (0-6h, 6-24h, 24-72h, 3-7d)
+- [x] P1-06: Cold-start velocity estimation
+- [x] P1-07: Initial channel baseline (median of recent videos)
+- [x] P1-08: BreakoutRatio computation
+- [x] P1-09: Manually label videos into trend groups (trend_labels.json)
+- [x] P1-10: Manager value labels (high/normal/low per trend)
+- [x] P1-11: Build Golden Dataset (data/shadow/golden_dataset.csv + .json)
+- [x] P1-12: Validation report (data/shadow/validation_report.md)
 
-## Acceptance Gate
+## Key Outputs
 
-```bash
-docker compose up  # all services start
-GET /health/live   # 200 OK
-GET /health/ready  # 200 OK
-```
+| Artifact | Path |
+|----------|------|
+| Watchlist | `scripts/shadow/watchlist.csv` |
+| Scraper | `scripts/shadow/fetch_videos.py` |
+| Scoring | `scripts/shadow/scoring.py` |
+| Golden CSV | `data/shadow/golden_dataset.csv` |
+| Golden JSON | `data/shadow/golden_dataset.json` |
+| Validation | `data/shadow/validation_report.md` |
+| Pipeline | `scripts/shadow/run_pipeline.py` |
 
-## Notes
+## Validation Summary
 
-- Stack: Python 3.12, FastAPI, Jinja2+HTMX, PostgreSQL, SQLAlchemy 2 async, Alembic, httpx, Pydantic, pytest, Docker
-- Commit: `Stage 0: Engineering baseline`
-- Next: Stage 1 shadow validation (see mvp-plan.md)
+- 389 videos, 79 channels, 10 labeled trends
+- Precision@15: 60%, Recall high-value: 100%
+- One Piece, JJK, Solo Leveling rank top; cross-channel resonance detected
+- Known gap: Hindi/manhwa clusters score high on resonance — calibrate in Stage 2
+
+## Next
+
+Stage 2: Watchlist DB + stable YouTube ingestion adapter

@@ -26,7 +26,6 @@ coverage.xml
 *.egg
 
 # ============================================================
-# OS
+# Shadow validation cache (golden dataset is committed)
 # ============================================================
-Thumbs.db
-.DS_Store
+data/shadow/cache/

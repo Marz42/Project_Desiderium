@@ -1,0 +1,16 @@
+{
+  "fetched_at": "2026-07-16T17:38:20.063308+00:00",
+  "video_count": 389,
+  "channel_count": 79,
+  "quota": {
+    "quota_used_estimate": 1121,
+    "search_calls": 10,
+    "max_search_calls": 10
+  },
+  "failed_channels": [
+    {
+      "name": "Watch Anime Recap",
+      "reason": "Client error '404 Not Found' for url 'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet%2CcontentDetails&playlistId=UUZzeiEcf5Le2ehOrbY-ajpw&maxResults=12&key=AIzaSyDU4VF7fhYomvasq-kSK7MwCzwOooZzSy0'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+    }
+  ]
+}
