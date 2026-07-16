@@ -28,6 +28,12 @@ LOCK_IDS = {
     "crawl_general": 1002,
     "crawl_keywords": 1003,
     "crawl_retry": 1004,
+    "crawl_tiktok_accounts": 1101,
+    "crawl_tiktok_keywords": 1102,
+    "crawl_tiktok_rankings": 1103,
+    "crawl_tiktok_retry": 1104,
+    "metric_snapshots": 1201,
+    "trend_discovery": 1202,
 }
 
 

@@ -51,7 +51,7 @@ async def retry_failed_crawls() -> None:
     async with lock:
         async with session_factory() as session:
             jobs_repo = CrawlJobRepository(session)
-            failed = await jobs_repo.list_failed_retryable()
+            failed = await jobs_repo.list_failed_retryable(adapter=CrawlJobAdapter.YOUTUBE)
             if not failed:
                 return
 

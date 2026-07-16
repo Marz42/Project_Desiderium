@@ -12,6 +12,12 @@ from app.jobs.crawl_tasks import (
     retry_failed_crawls,
 )
 from app.jobs.semantic_tasks import run_semantic_analysis
+from app.jobs.tiktok_tasks import (
+    crawl_tiktok_accounts,
+    crawl_tiktok_keywords,
+    crawl_tiktok_rankings,
+    retry_failed_tiktok_crawls,
+)
 from app.jobs.transcript_tasks import fetch_priority_transcripts
 from app.jobs.trend_tasks import capture_metric_snapshots, run_trend_discovery
 
@@ -92,3 +98,41 @@ def register_crawl_jobs(scheduler: AsyncIOScheduler, settings: Settings) -> None
         max_instances=1,
         coalesce=True,
     )
+
+    if settings.tiktok_enabled:
+        scheduler.add_job(
+            crawl_tiktok_accounts,
+            "interval",
+            hours=settings.tiktok_crawl_hours,
+            id="crawl_tiktok_accounts",
+            replace_existing=True,
+            max_instances=1,
+            coalesce=True,
+        )
+        scheduler.add_job(
+            crawl_tiktok_keywords,
+            "interval",
+            hours=settings.tiktok_crawl_hours,
+            id="crawl_tiktok_keywords",
+            replace_existing=True,
+            max_instances=1,
+            coalesce=True,
+        )
+        scheduler.add_job(
+            crawl_tiktok_rankings,
+            "interval",
+            hours=settings.tiktok_crawl_hours,
+            id="crawl_tiktok_rankings",
+            replace_existing=True,
+            max_instances=1,
+            coalesce=True,
+        )
+        scheduler.add_job(
+            retry_failed_tiktok_crawls,
+            "interval",
+            hours=settings.tiktok_retry_hours,
+            id="crawl_tiktok_retry",
+            replace_existing=True,
+            max_instances=1,
+            coalesce=True,
+        )

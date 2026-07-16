@@ -13,6 +13,7 @@ from app.models import (
     CrawlJobStatus,
     CrawlJobType,
     CrawlOutcome,
+    Platform,
     WatchItem,
     WatchTier,
 )
@@ -47,6 +48,7 @@ class WatchlistRepository:
         self,
         *,
         tier: WatchTier | None = None,
+        platform: Platform | None = None,
         enabled_only: bool = False,
         limit: int = 200,
         offset: int = 0,
@@ -54,6 +56,8 @@ class WatchlistRepository:
         stmt = select(WatchItem).order_by(WatchItem.tier, WatchItem.name)
         if tier is not None:
             stmt = stmt.where(WatchItem.tier == tier)
+        if platform is not None:
+            stmt = stmt.where(WatchItem.platform == platform)
         if enabled_only:
             stmt = stmt.where(WatchItem.enabled.is_(True))
         stmt = stmt.limit(limit).offset(offset)
@@ -202,14 +206,23 @@ class CrawlJobRepository:
         result = await self._session.scalars(stmt)
         return list(result.all())
 
-    async def list_failed_retryable(self, *, max_retries: int = 3, limit: int = 20) -> list[CrawlJob]:
+    async def list_failed_retryable(
+        self,
+        *,
+        adapter: CrawlJobAdapter | None = None,
+        max_retries: int = 3,
+        limit: int = 20,
+    ) -> list[CrawlJob]:
+        conditions = [
+            CrawlJob.status == CrawlJobStatus.FAILED,
+            CrawlJob.retry_count < max_retries,
+            CrawlJob.watch_item_id.is_not(None),
+        ]
+        if adapter is not None:
+            conditions.append(CrawlJob.adapter == adapter)
         stmt = (
             select(CrawlJob)
-            .where(
-                CrawlJob.status == CrawlJobStatus.FAILED,
-                CrawlJob.retry_count < max_retries,
-                CrawlJob.watch_item_id.is_not(None),
-            )
+            .where(*conditions)
             .order_by(CrawlJob.finished_at.asc())
             .limit(limit)
         )

@@ -32,6 +32,12 @@ class Settings(BaseSettings):
     crawl_priority_hours: int = Field(default=5, alias="CRAWL_PRIORITY_HOURS")
     crawl_general_hours: int = Field(default=18, alias="CRAWL_GENERAL_HOURS")
     crawl_keyword_hour: int = Field(default=6, alias="CRAWL_KEYWORD_HOUR")
+
+    tiktok_enabled: bool = Field(default=False, alias="TIKTOK_ENABLED")
+    tiktok_cookie: str = Field(default="", alias="TIKTOK_COOKIE")
+    tiktok_page_version: str = Field(default="v1", alias="TIKTOK_PAGE_VERSION")
+    tiktok_crawl_hours: int = Field(default=12, alias="TIKTOK_CRAWL_HOURS")
+    tiktok_retry_hours: int = Field(default=2, alias="TIKTOK_RETRY_HOURS")
     llm_api_key: str = Field(default="", alias="LLM_API_KEY")
     llm_base_url: str = Field(default="", alias="LLM_BASE_URL")
     llm_model: str = Field(default="", alias="LLM_MODEL")

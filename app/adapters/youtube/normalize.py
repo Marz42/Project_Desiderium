@@ -6,6 +6,8 @@ import re
 from datetime import datetime
 from typing import Any
 
+from app.domain.source_confidence import SOURCE_CONFIDENCE_HIGH
+
 
 def parse_iso8601_duration(duration: str | None) -> int | None:
     if not duration:
@@ -61,6 +63,7 @@ def normalize_youtube_video(raw_item: dict[str, Any]) -> dict[str, Any]:
         "thumbnail_url": (snippet.get("thumbnails") or {}).get("high", {}).get("url"),
         "language": snippet.get("defaultAudioLanguage") or snippet.get("defaultLanguage"),
         "region": None,
+        "source_confidence": SOURCE_CONFIDENCE_HIGH,
         "raw_payload": raw_item,
         "metrics": {
             "views": _int_or_none("viewCount") or 0,

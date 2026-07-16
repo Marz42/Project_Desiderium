@@ -68,3 +68,9 @@ relative_breakout:
 lifecycle:
   new_max_age_hours: 24
   dormant_activity_threshold: 5.0
+
+platforms:
+  youtube:
+    source_confidence: high
+  tiktok:
+    source_confidence: low

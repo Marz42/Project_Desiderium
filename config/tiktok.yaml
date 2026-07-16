@@ -1,0 +1,17 @@
+# TikTok experimental scraper configuration (Stage 7).
+# Page selectors are versioned — bump page_version when TikTok changes DOM.
+
+page_version: v1
+
+default_max_items:
+  priority: 20
+  general: 15
+  experimental: 10
+
+crawl_interval_hours: 12
+retry_interval_hours: 2
+failure_alert_threshold: 3
+
+user_agent: >-
+  Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+  (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36
