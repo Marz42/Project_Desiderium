@@ -1,0 +1,84 @@
+---
+description: OKF-compatible Memory-Bank 工作流协议 — 定义三态目录、知识温度体系、模板机制和 Agent 读写规则。
+alwaysApply: true
+---
+
+# Memory-Bank Protocol
+
+> **同步自 `AGENT_RULES.md`。** 协议变更时先改源头，再更新本文件。
+
+本项目使用 OKF-compatible Memory-Bank：
+
+- `memory-bank/runtime/`：当前运行状态，不作为 OKF knowledge 导出。
+- `memory-bank/logs/`：会话日志和版本日志。
+- `memory-bank/knowledge/`：长期知识库，非 `index.md` / `log.md` 文档必须有 YAML frontmatter、非空 `type`，并通过 strict OKF lint。
+- `docs/rfc/`：Paradigma 自身 RFC 文档区，也按 OKF concept 文档维护。
+- `memory-bank-template/`：空白模板源。
+
+## Read Phase
+
+每次任务开始先读取：
+
+1. `memory-bank/runtime/active-task.md`
+2. `memory-bank/knowledge/index.md`
+3. HOT knowledge：
+   - `memory-bank/knowledge/project-brief.md`
+   - `memory-bank/knowledge/architecture.md`
+   - `memory-bank/knowledge/conventions.md`
+   - `memory-bank/knowledge/contracts/repository-contract.md`
+4. 根据任务从 index 选择最相关的 WARM/COLD 文档。
+5. 若任务涉及前端/UI 且项目存在 `DESIGN.md`，将其和 `domains/design-system.md` 加入读取列表。
+6. 必要时根据 relations 补读依赖。
+
+## WARM / COLD
+
+- WARM：`memory-bank/knowledge/domains/*.md`、`memory-bank/knowledge/plans/*.md`、`memory-bank/knowledge/contracts/*.md`、`memory-bank/knowledge/manuals/*.md`、`docs/rfc/*.md`、`DESIGN.md`（项目根目录，若存在）
+- COLD：`memory-bank/knowledge/decisions/*.md`、`memory-bank/knowledge/known-issues/*.md`、`memory-bank/knowledge/glossary.md`、`memory-bank/logs/**`
+
+## Plan Phase Checkpoint
+
+规划完成后提醒：
+- 有新架构决策 → 追加 ADR 到 `memory-bank/knowledge/decisions/`
+- 有模块设计变更 → 更新 `memory-bank/knowledge/domains/`
+- 更新 `memory-bank/runtime/active-task.md` checklist
+
+## Execution Checkpoint
+
+关键子步骤完成后提醒：
+- API/DB schema 变更 → 更新 `memory-bank/knowledge/contracts/`
+- 新代码规范/发现 → 更新 `memory-bank/knowledge/conventions.md`
+- bug/坑位 → 记录到 `memory-bank/knowledge/known-issues/`
+- active-task checklist 打勾
+
+## 时间戳规范
+
+写入日志、ADR、active-task、known issue、changelog 前必须先调用 Shell 获取时间：
+
+| 平台 | 命令 | 输出格式 |
+|------|------|----------|
+| Linux / macOS | `date +"%Y-%m-%d %H:%M"` | `YYYY-MM-DD HH:mm` |
+| Windows PowerShell | `Get-Date -Format "yyyy-MM-dd HH:mm"` | `YYYY-MM-DD HH:mm` |
+
+## Update Phase
+
+结束前必须：
+
+- 更新 `memory-bank/runtime/active-task.md`
+- 追加 `memory-bank/logs/progress/YYYY-MM-DD-*.md`
+- 修改长期知识时更新 `memory-bank/knowledge/`
+- 修改契约时更新 `memory-bank/knowledge/contracts/`
+- 做架构决策时追加 `memory-bank/knowledge/decisions/`
+- 运行 `python .paradigma/tools/pd-check-all.py`
+- 任务完成且 active-task 可归档时，可运行 `python .paradigma/tools/pd-archive-task.py --write`
+- progress logs 过长时，可运行 `python .paradigma/tools/pd-compact-progress.py --write`
+- 按 `conventions.md` 评估版本号，必要时更新 `VERSION` 和 `memory-bank/logs/changelog.md`
+- （可选）若项目存在 `DESIGN.md` → 检查视觉设计规范与实现一致性
+- 结束时告知用户："Memory-bank 已更新完毕。本次更新了：[文件列表]"
+
+## 防幻觉
+
+- 不确定时先读相关 knowledge / contract / RFC。
+- 术语不清时读 glossary。
+- 类似问题先查 known issues。
+- 不手动维护 generated block。
+- 怀疑 Paradigma 版本过旧时运行 `pd-diagnose.py --check-version --upstream <path>`。

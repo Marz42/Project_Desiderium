@@ -1,0 +1,23 @@
+okf_version: "0.1"
+schema_version: "0.1"
+
+knowledge_roots:
+  - memory-bank/knowledge
+  - docs/rfc
+
+reserved_filenames:
+  - index.md
+  - log.md
+
+generated_markers:
+  begin: "<!-- BEGIN PARADIGMA AUTO-INDEX -->"
+  end: "<!-- END PARADIGMA AUTO-INDEX -->"
+
+runtime_root: memory-bank/runtime
+logs_root: memory-bank/logs
+template_root: memory-bank-template
+
+# Paradigma Harness 版本追踪。
+# 记录当前项目使用的 Paradigma 模板库版本号。
+# 运行 pd-diagnose.py 可以检查是否有更新。
+paradigma_harness_version: "0.4.2"
