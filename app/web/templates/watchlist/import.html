@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}CSV 导入 — Desiderium{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <h2 style="margin:0">CSV 批量导入</h2>
+  <a href="/watchlist" class="btn">返回列表</a>
+</div>
+
+<div class="card" style="max-width:640px">
+  <p class="muted">必需列：type, platform, name, url_or_id, tier, tags, note, enabled</p>
+  <form method="post" enctype="multipart/form-data">
+    <label for="file">选择 CSV 文件</label>
+    <input type="file" name="file" id="file" accept=".csv,text/csv" required>
+    <button type="submit" class="btn btn-primary">导入</button>
+  </form>
+</div>
+
+{% if result %}
+<div class="card">
+  <h3>导入结果</h3>
+  <p>成功导入 <strong>{{ result.imported }}</strong> 项，跳过 {{ result.skipped }} 项。</p>
+  {% if result.errors %}
+  <ul>
+    {% for err in result.errors %}
+    <li style="color:var(--danger)">{{ err }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

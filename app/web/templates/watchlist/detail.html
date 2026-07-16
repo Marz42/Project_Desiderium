@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}{{ item.name }} — Desiderium{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <h2 style="margin:0">{{ item.name }}</h2>
+  <div class="actions">
+    <form method="post" action="/watchlist/{{ item.id }}/crawl">
+      <button type="submit" class="btn btn-primary" {% if not item.enabled %}disabled{% endif %}>立即抓取</button>
+    </form>
+    <a href="/watchlist/{{ item.id }}/edit" class="btn">编辑</a>
+    <a href="/watchlist" class="btn">返回列表</a>
+  </div>
+</div>
+
+<div class="card">
+  <dl style="display:grid;grid-template-columns:140px 1fr;gap:0.5rem 1rem;margin:0">
+    <dt class="muted">类型</dt><dd>{{ item.type }}</dd>
+    <dt class="muted">平台</dt><dd>{{ item.platform }}</dd>
+    <dt class="muted">外部 ID</dt><dd><code>{{ item.external_id }}</code></dd>
+    <dt class="muted">URL</dt><dd>{{ item.url or '—' }}</dd>
+    <dt class="muted">等级</dt><dd><span class="badge badge-{{ item.tier }}">{{ item.tier }}</span></dd>
+    <dt class="muted">标签</dt><dd>{{ (item.tags or [])|join(', ') or '—' }}</dd>
+    <dt class="muted">备注</dt><dd>{{ item.note or '—' }}</dd>
+    <dt class="muted">状态</dt><dd>{{ '启用' if item.enabled else '停用' }}</dd>
+    <dt class="muted">最后成功</dt><dd>{{ item.last_success_at or '—' }}</dd>
+    <dt class="muted">最后尝试</dt><dd>{{ item.last_attempt_at or '—' }}</dd>
+    <dt class="muted">抓取结果</dt><dd>{{ item.last_status or '—' }}</dd>
+    <dt class="muted">连续失败</dt><dd>{{ item.consecutive_failures }}</dd>
+  </dl>
+</div>
+
+{% if crawl_jobs %}
+<div class="card">
+  <h3>最近抓取任务</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>时间</th>
+        <th>状态</th>
+        <th>处理数</th>
+        <th>错误</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for job in crawl_jobs %}
+      <tr>
+        <td>{{ job.started_at or job.created_at }}</td>
+        <td><span class="badge badge-{{ job.status }}">{{ job.status }}</span></td>
+        <td>{{ job.items_processed }}</td>
+        <td class="muted">{{ job.error_message or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<form method="post" action="/watchlist/{{ item.id }}/delete" onsubmit="return confirm('确认删除？')">
+  <button type="submit" class="btn btn-danger">删除监控项</button>
+</form>
+{% endblock %}

@@ -10,6 +10,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from app.config import get_settings
 from app.db import check_database_connection, dispose_engine
+from app.jobs.scheduler import register_crawl_jobs
 from app.logging_config import configure_logging
 
 logger = logging.getLogger(__name__)
@@ -37,6 +38,7 @@ async def run_worker() -> None:
 
     scheduler = AsyncIOScheduler()
     scheduler.add_job(heartbeat, "interval", minutes=5, id="heartbeat", replace_existing=True)
+    register_crawl_jobs(scheduler, settings)
     scheduler.start()
     await heartbeat()
 

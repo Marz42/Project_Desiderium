@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}{{ '编辑' if item else '新增' }}监控项 — Desiderium{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <h2 style="margin:0">{{ '编辑' if item else '新增' }}监控项</h2>
+  <a href="/watchlist" class="btn">返回列表</a>
+</div>
+
+<div class="card" style="max-width:640px">
+  <form method="post" action="{{ '/watchlist/' + item.id if item else '/watchlist' }}">
+    <div class="form-row">
+      <div>
+        <label for="type">类型</label>
+        <select name="type" id="type" required>
+          {% for t in types %}
+          <option value="{{ t }}" {% if item and item.type == t %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="platform">平台</label>
+        <select name="platform" id="platform" required>
+          {% for p in platforms %}
+          <option value="{{ p }}" {% if item and item.platform == p %}selected{% endif %}>{{ p }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <label for="name">显示名称</label>
+    <input type="text" name="name" id="name" required value="{{ item.name if item else '' }}">
+
+    <label for="url_or_id">URL 或 ID / 关键词</label>
+    <input type="text" name="url_or_id" id="url_or_id" value="{{ item.external_id if item else '' }}">
+
+    <div class="form-row">
+      <div>
+        <label for="tier">等级</label>
+        <select name="tier" id="tier">
+          {% for t in tiers %}
+          <option value="{{ t }}" {% if (item and item.tier == t) or (not item and t == 'general') %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="enabled">启用</label>
+        <select name="enabled" id="enabled">
+          <option value="true" {% if not item or item.enabled %}selected{% endif %}>是</option>
+          <option value="false" {% if item and not item.enabled %}selected{% endif %}>否</option>
+        </select>
+      </div>
+    </div>
+
+    <label for="tags">标签（逗号分隔）</label>
+    <input type="text" name="tags" id="tags" value="{{ (item.tags or [])|join(', ') if item else '' }}">
+
+    <label for="note">备注</label>
+    <textarea name="note" id="note" rows="3">{{ item.note if item and item.note else '' }}</textarea>
+
+    <button type="submit" class="btn btn-primary">保存</button>
+  </form>
+</div>
+{% endblock %}

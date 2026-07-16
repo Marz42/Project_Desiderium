@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}监控列表 — Desiderium{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <div>
+    <h2 style="margin:0">监控列表</h2>
+    <p class="muted">{{ items|length }} 项 · 上限 100</p>
+  </div>
+  <div class="actions">
+    <a href="/watchlist/import" class="btn">CSV 导入</a>
+    <a href="/watchlist/new" class="btn btn-primary">新增监控项</a>
+  </div>
+</div>
+
+<div class="card">
+  <form method="get" class="form-row" style="margin-bottom:1rem">
+    <div>
+      <label>等级筛选</label>
+      <select name="tier" onchange="this.form.submit()">
+        <option value="">全部</option>
+        {% for t in tiers %}
+        <option value="{{ t }}" {% if filter_tier == t %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label>状态</label>
+      <select name="enabled" onchange="this.form.submit()">
+        <option value="">全部</option>
+        <option value="true" {% if filter_enabled == 'true' %}selected{% endif %}>已启用</option>
+        <option value="false" {% if filter_enabled == 'false' %}selected{% endif %}>已停用</option>
+      </select>
+    </div>
+  </form>
+
+  <table>
+    <thead>
+      <tr>
+        <th>名称</th>
+        <th>类型</th>
+        <th>平台</th>
+        <th>等级</th>
+        <th>标签</th>
+        <th>抓取状态</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+      <tr class="{% if not item.enabled %}disabled{% endif %}">
+        <td>
+          <a href="/watchlist/{{ item.id }}" style="color:var(--text)">{{ item.name }}</a>
+          {% if not item.enabled %}<span class="muted">(停用)</span>{% endif %}
+        </td>
+        <td>{{ item.type }}</td>
+        <td>{{ item.platform }}</td>
+        <td><span class="badge badge-{{ item.tier }}">{{ item.tier }}</span></td>
+        <td class="muted">{{ (item.tags or [])|join(', ') }}</td>
+        <td>
+          {% if item.last_status %}
+          <span class="badge badge-{{ item.last_status }}">{{ item.last_status }}</span>
+          {% else %}
+          <span class="muted">—</span>
+          {% endif %}
+          {% if item.last_success_at %}
+          <div class="muted" style="font-size:0.75rem">{{ item.last_success_at }}</div>
+          {% endif %}
+          {% if item.consecutive_failures > 0 %}
+          <div class="muted" style="color:var(--danger)">连续失败 {{ item.consecutive_failures }}</div>
+          {% endif %}
+        </td>
+        <td>
+          <div class="actions">
+            <form method="post" action="/watchlist/{{ item.id }}/crawl" style="display:inline">
+              <button type="submit" class="btn btn-sm" {% if not item.enabled %}disabled{% endif %}>抓取</button>
+            </form>
+            <form method="post" action="/watchlist/{{ item.id }}/toggle" style="display:inline">
+              <button type="submit" class="btn btn-sm">{{ '启用' if not item.enabled else '停用' }}</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="muted">暂无监控项。<a href="/watchlist/import">导入 CSV</a> 或 <a href="/watchlist/new">新增</a>。</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

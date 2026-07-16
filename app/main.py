@@ -7,6 +7,7 @@ from app.config import get_settings
 from app.db import dispose_engine
 from app.logging_config import configure_logging
 from app.web.routes.health import router as health_router
+from app.web.routes.watchlist import router as watchlist_router
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,7 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
     app.include_router(health_router)
+    app.include_router(watchlist_router)
     return app
 
 

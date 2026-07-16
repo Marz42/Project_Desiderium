@@ -26,6 +26,12 @@ class Settings(BaseSettings):
         default="",
         validation_alias=AliasChoices("YOUTUBE_DATA_API_KEY", "YOUTUBE_API_KEY"),
     )
+    youtube_daily_quota_limit: int = Field(default=10_000, alias="YOUTUBE_DAILY_QUOTA_LIMIT")
+    youtube_max_search_calls: int = Field(default=100, alias="YOUTUBE_MAX_SEARCH_CALLS")
+
+    crawl_priority_hours: int = Field(default=5, alias="CRAWL_PRIORITY_HOURS")
+    crawl_general_hours: int = Field(default=18, alias="CRAWL_GENERAL_HOURS")
+    crawl_keyword_hour: int = Field(default=6, alias="CRAWL_KEYWORD_HOUR")
     llm_api_key: str = Field(default="", alias="LLM_API_KEY")
     secret_key: str = Field(default="change-me-in-production", alias="SECRET_KEY")
 
