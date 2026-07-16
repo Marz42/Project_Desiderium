@@ -1,0 +1,70 @@
+# Trend discovery algorithm parameters (Stage 3).
+# All thresholds live here — services must not hardcode scoring constants.
+
+scoring:
+  channel_resonance_weight: 0.35
+  relative_breakout_weight: 0.25
+  momentum_weight: 0.20
+  persistence_weight: 0.10
+  absolute_scale_weight: 0.05
+  novelty_weight: 0.05
+  target_channel_count: 8.0
+  capped_breakout_max: 8.0
+  epsilon: 1.0e-6
+  min_age_hours: 2.0
+
+thresholds:
+  breakout: 2.0
+  strong_breakout: 4.0
+  below_average: 0.75
+  normal: 1.5
+  above_average: 2.0
+  rising_ratio: 1.25
+  declining_ratio: 0.80
+  reviving_ratio: 1.50
+  standard_min_videos_72h: 3
+  standard_breakout_ge_2_pct: 0.5
+  early_min_videos_24h: 2
+  dormant_hours_no_video: 72
+  min_cluster_members: 2
+  min_cluster_channels: 2
+
+channels:
+  priority_weight: 1.5
+  general_weight: 1.0
+  experimental_weight: 0.5
+
+baselines:
+  sample_size: 20
+  confidence_high_min: 20
+  confidence_medium_min: 10
+  confidence_low_min: 5
+
+snapshots:
+  age_0_24h_interval_hours: 5
+  age_1_3d_interval_hours: 10
+  age_3_7d_interval_hours: 24
+  lookback_days: 7
+
+momentum:
+  recent_24h_multiplier: 25
+  recent_72h_multiplier: 10
+  persistence_channel_multiplier: 15
+  absolute_scale_log_multiplier: 8
+
+novelty:
+  fresh_24h_score: 100
+  fresh_72h_score: 70
+  fresh_7d_score: 40
+  fresh_default_score: 20
+  fresh_24h_min_videos: 2
+  fresh_72h_min_videos: 3
+
+relative_breakout:
+  median_weight: 0.6
+  pct_ge_2_weight: 0.4
+  pct_ge_2_scale: 100.0
+
+lifecycle:
+  new_max_age_hours: 24
+  dormant_activity_threshold: 5.0

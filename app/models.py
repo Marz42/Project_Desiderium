@@ -389,6 +389,38 @@ class TrendTheme(Base):
     members: Mapped[list[TrendMember]] = relationship(back_populates="trend")
     creative_angles: Mapped[list[CreativeAngle]] = relationship(back_populates="trend")
     daily_candidates: Mapped[list[DailyCandidate]] = relationship(back_populates="trend")
+    score_snapshots: Mapped[list[TrendScoreSnapshot]] = relationship(back_populates="trend")
+
+
+class TrendScoreSnapshot(Base):
+    __tablename__ = "trend_score_snapshots"
+    __table_args__ = (
+        UniqueConstraint("trend_id", "snapshot_date", name="uq_trend_score_snapshots_trend_date"),
+        Index("ix_trend_score_snapshots_snapshot_date", "snapshot_date"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    trend_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("trend_themes.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    snapshot_date: Mapped[date] = mapped_column(Date, nullable=False)
+    score: Mapped[float] = mapped_column(Float, nullable=False)
+    score_components: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    lifecycle_status: Mapped[LifecycleStatus] = mapped_column(
+        Enum(LifecycleStatus, name="lifecycle_status"),
+        nullable=False,
+    )
+    member_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    channel_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+    trend: Mapped[TrendTheme] = relationship(back_populates="score_snapshots")
 
 
 class TrendMember(Base):

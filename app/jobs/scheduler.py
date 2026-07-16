@@ -11,6 +11,7 @@ from app.jobs.crawl_tasks import (
     crawl_priority_channels,
     retry_failed_crawls,
 )
+from app.jobs.trend_tasks import capture_metric_snapshots, run_trend_discovery
 
 
 def register_crawl_jobs(scheduler: AsyncIOScheduler, settings: Settings) -> None:
@@ -47,6 +48,25 @@ def register_crawl_jobs(scheduler: AsyncIOScheduler, settings: Settings) -> None
         "interval",
         hours=1,
         id="crawl_retry",
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+    )
+    scheduler.add_job(
+        capture_metric_snapshots,
+        "interval",
+        hours=4,
+        id="metric_snapshots",
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+    )
+    scheduler.add_job(
+        run_trend_discovery,
+        "cron",
+        hour=1,
+        minute=30,
+        id="trend_discovery",
         replace_existing=True,
         max_instances=1,
         coalesce=True,
