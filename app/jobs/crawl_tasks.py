@@ -10,6 +10,7 @@ from app.jobs.mutex import acquire_batch_mutex, get_process_lock, release_batch_
 from app.models import CrawlJobAdapter, CrawlJobType, WatchItemType, WatchTier
 from app.repositories.watchlist import CrawlJobRepository
 from app.services.ingestion import create_youtube_ingestion
+from app.services.quota_tracker import persist_youtube_quota
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +67,11 @@ async def retry_failed_crawls() -> None:
                     except Exception:  # noqa: BLE001
                         logger.exception("retry failed for job %s", job.id)
             finally:
+                await persist_youtube_quota(
+                    session,
+                    adapter.quota_summary(),
+                    exhausted=adapter.quota_exhausted,
+                )
                 await adapter.close()
 
 
@@ -122,6 +128,11 @@ async def _run_batch_crawl(
                     extra={"service": "worker", "component": job_name, **summary},
                 )
             finally:
+                await persist_youtube_quota(
+                    session,
+                    adapter.quota_summary(),
+                    exhausted=adapter.quota_exhausted,
+                )
                 await adapter.close()
                 await release_batch_mutex(session, job_name)
 

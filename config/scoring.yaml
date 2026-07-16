@@ -45,6 +45,7 @@ snapshots:
   age_1_3d_interval_hours: 10
   age_3_7d_interval_hours: 24
   lookback_days: 7
+  retention_days: 90
 
 momentum:
   recent_24h_multiplier: 25

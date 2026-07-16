@@ -11,6 +11,7 @@ from app.jobs.crawl_tasks import (
     crawl_priority_channels,
     retry_failed_crawls,
 )
+from app.jobs.ops_tasks import monitor_disk_space, purge_stale_metric_snapshots
 from app.jobs.semantic_tasks import run_semantic_analysis
 from app.jobs.tiktok_tasks import (
     crawl_tiktok_accounts,
@@ -136,3 +137,23 @@ def register_crawl_jobs(scheduler: AsyncIOScheduler, settings: Settings) -> None
             max_instances=1,
             coalesce=True,
         )
+
+    scheduler.add_job(
+        purge_stale_metric_snapshots,
+        "cron",
+        hour=3,
+        minute=30,
+        id="snapshot_retention",
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+    )
+    scheduler.add_job(
+        monitor_disk_space,
+        "interval",
+        hours=1,
+        id="disk_monitor",
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+    )

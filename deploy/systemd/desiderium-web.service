@@ -1,0 +1,17 @@
+[Unit]
+Description=Desiderium Web API
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=desiderium
+Group=desiderium
+WorkingDirectory=/opt/desiderium
+EnvironmentFile=/etc/desiderium/desiderium.env
+ExecStart=/opt/desiderium/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 2
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

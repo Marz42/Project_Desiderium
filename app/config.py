@@ -44,6 +44,20 @@ class Settings(BaseSettings):
     secret_key: str = Field(default="change-me-in-production", alias="SECRET_KEY")
     manager_password: str = Field(default="", alias="MANAGER_PASSWORD")
 
+    domain: str = Field(default="", alias="DOMAIN")
+    snapshot_retention_days: int = Field(default=90, alias="SNAPSHOT_RETENTION_DAYS")
+    disk_warn_percent: int = Field(default=85, alias="DISK_WARN_PERCENT")
+    backup_retention_days: int = Field(default=14, alias="BACKUP_RETENTION_DAYS")
+    worker_stale_minutes: int = Field(default=15, alias="WORKER_STALE_MINUTES")
+    llm_cost_per_million_input_usd: float = Field(
+        default=0.15,
+        alias="LLM_COST_PER_MILLION_INPUT_USD",
+    )
+    llm_cost_per_million_output_usd: float = Field(
+        default=0.60,
+        alias="LLM_COST_PER_MILLION_OUTPUT_USD",
+    )
+
     @property
     def database_url_str(self) -> str:
         return self.database_url

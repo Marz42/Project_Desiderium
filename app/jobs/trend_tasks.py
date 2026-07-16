@@ -8,6 +8,7 @@ from app.db import get_session_factory
 from app.jobs.mutex import acquire_batch_mutex, get_process_lock, release_batch_mutex
 from app.models import CrawlJobAdapter, CrawlJobType
 from app.services.ingestion import create_youtube_ingestion
+from app.services.quota_tracker import persist_youtube_quota
 from app.services.snapshots import SnapshotService
 from app.services.trend_discovery import TrendDiscoveryService
 
@@ -38,6 +39,11 @@ async def capture_metric_snapshots() -> None:
             try:
                 service = SnapshotService(session, adapter)
                 summary = await service.capture_snapshots()
+                await persist_youtube_quota(
+                    session,
+                    adapter.quota_summary(),
+                    exhausted=adapter.quota_exhausted,
+                )
                 await session.commit()
                 logger.info(
                     "metric_snapshots completed",

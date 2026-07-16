@@ -6,6 +6,11 @@
 
 ---
 
+## [0.7.0] - 2026-07-17
+
+### Added
+- Stage 8 production ops: `Dockerfile.prod`, `docker-compose.prod.yml` with Caddy HTTPS, backup/restore scripts, log rotation config, disk monitor, `/admin/status` dashboard, expanded `/health`, snapshot retention job, YouTube quota persistence, LLM usage tracking, `OPS.md` and `RECOVERY.md`, systemd unit files.
+
 ## [0.6.0] - 2026-07-17
 
 ### Added

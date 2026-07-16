@@ -1,23 +1,21 @@
-# Active Task: Stage 7 — TikTok Experiment Adapter
+# Active Task: Stage 8 — Deployment, Stability & Ops
 
-**Status:** completed | **Depends on:** Stage 5 ✓
+**Status:** completed | **Depends on:** Stage 5, 7 ✓
 
 ## Objective
-Isolated experimental adapter. Must NOT affect YouTube pipeline.
+Production-ready deployment with backup, monitoring, and runbooks.
 
 ## Deliverables
-- [x] TikTokAdapter implementing SourceAdapter
-- [x] Account scraping, keyword scraping, public list/tag scraping
-- [x] Cookie management via `TIKTOK_COOKIE` env var (not in git)
-- [x] Cookie expiry detection
-- [x] Page structure version isolation (`config/tiktok.yaml`, selector v1)
-- [x] Normalized output matching content_items schema
-- [x] Source confidence: YouTube=high, TikTok=low
-- [x] Independent worker tasks + isolated failure/retry
-- [x] Global on/off toggle (`TIKTOK_ENABLED`, default false)
-- [x] Failure alerting + crawl_job logging
-
-## Notes
-- No stability guarantee — experimental per MVP spec.
-- TikTok jobs only registered when `TIKTOK_ENABLED=true`.
-- YouTube crawl/retry/trend pipeline unchanged.
+- [x] Production Dockerfile + Compose config (`Dockerfile.prod`, `docker-compose.prod.yml`)
+- [x] Database auto-backup + restore procedure (`scripts/backup.sh`, `scripts/restore.sh`)
+- [x] HTTPS reverse proxy (Caddy — `deploy/caddy/Caddyfile`)
+- [x] Single-manager auth hardening (existing `MANAGER_PASSWORD` middleware)
+- [x] Secret management (.env only, no git)
+- [x] Log rotation + disk monitoring (`config/logrotate.desiderium`, `scripts/disk_monitor.sh`, worker job)
+- [x] Task failure summary endpoint (`GET /admin/status`)
+- [x] DB index optimization + snapshot retention (`scripts/optimize_db_indexes.py`, nightly purge job)
+- [x] API quota monitoring (`youtube_quota_usage` in `/admin/status`, `api_quota_daily` table)
+- [x] LLM cost tracking (`llm_usage_logs` table, semantic analysis integration)
+- [x] Operations manual + failure recovery guide (`OPS.md`, `RECOVERY.md`)
+- [x] Healthcheck endpoint expansion (`GET /health` — DB, disk, worker)
+- [x] Systemd service files (`deploy/systemd/`)

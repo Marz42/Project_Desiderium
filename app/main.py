@@ -8,6 +8,7 @@ from app.config import get_settings
 from app.db import dispose_engine
 from app.logging_config import configure_logging
 from app.web.middleware import AuthMiddleware
+from app.web.routes.admin_status import router as admin_status_router
 from app.web.routes.auth import router as auth_router
 from app.web.routes.brief import router as brief_router
 from app.web.routes.candidates import router as candidates_router
@@ -46,6 +47,7 @@ def create_app() -> FastAPI:
     )
     app.add_middleware(AuthMiddleware)
     app.include_router(health_router)
+    app.include_router(admin_status_router)
     app.include_router(auth_router)
     app.include_router(candidates_router)
     app.include_router(trends_router)

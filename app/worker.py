@@ -9,7 +9,7 @@ import signal
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from app.config import get_settings
-from app.db import check_database_connection, dispose_engine
+from app.db import check_database_connection, dispose_engine, get_session_factory
 from app.jobs.scheduler import register_crawl_jobs
 from app.logging_config import configure_logging
 
@@ -26,6 +26,16 @@ async def heartbeat() -> None:
             "database": "up" if db_ok else "down",
         },
     )
+    session_factory = get_session_factory()
+    async with session_factory() as session:
+        from app.repositories.ops import OpsRepository
+
+        repo = OpsRepository(session)
+        await repo.upsert_heartbeat(
+            "worker",
+            details={"database": "up" if db_ok else "down"},
+        )
+        await session.commit()
 
 
 async def run_worker() -> None:

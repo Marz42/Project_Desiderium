@@ -34,6 +34,7 @@ LOCK_IDS = {
     "crawl_tiktok_retry": 1104,
     "metric_snapshots": 1201,
     "trend_discovery": 1202,
+    "snapshot_retention": 1203,
 }
 
 

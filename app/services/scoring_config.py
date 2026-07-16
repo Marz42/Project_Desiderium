@@ -63,6 +63,7 @@ class SnapshotScheduleConfig:
     age_1_3d_interval_hours: float
     age_3_7d_interval_hours: float
     lookback_days: int
+    retention_days: int
 
 
 @dataclass(frozen=True)
@@ -191,6 +192,7 @@ def load_scoring_config(path: Path | None = None) -> ScoringConfig:
             age_1_3d_interval_hours=float(snapshots["age_1_3d_interval_hours"]),
             age_3_7d_interval_hours=float(snapshots["age_3_7d_interval_hours"]),
             lookback_days=int(snapshots["lookback_days"]),
+            retention_days=int(snapshots.get("retention_days", 90)),
         ),
         momentum=MomentumConfig(
             recent_24h_multiplier=float(momentum["recent_24h_multiplier"]),

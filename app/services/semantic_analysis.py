@@ -29,6 +29,7 @@ from app.schemas.semantic import (
 )
 from app.services.angle_dedup import filter_unique_angles, semantic_fingerprint
 from app.services.evidence import require_evidence_ids, validate_evidence_ids
+from app.services.llm_usage import record_llm_call
 from app.services.llm_config import LlmConfig, LlmSettings, get_llm_config, load_prompt_template
 from app.services.transcripts import TranscriptService
 
@@ -58,6 +59,36 @@ class SemanticAnalysisService:
     async def close(self) -> None:
         await self._transcripts.close()
         await self._llm.close()
+
+    async def _structured_llm(
+        self,
+        prompt,
+        variables: dict[str, Any],
+        result_model: type,
+        *,
+        prompt_name: str,
+    ):
+        before = self._llm.usage.model_copy()
+        result = await self._llm.complete_structured(
+            prompt,
+            variables,
+            result_model,
+            prompt_name=prompt_name,
+        )
+        prompt_delta = self._llm.usage.prompt_tokens - before.prompt_tokens
+        completion_delta = self._llm.usage.completion_tokens - before.completion_tokens
+        total_delta = self._llm.usage.total_tokens - before.total_tokens
+        if total_delta > 0:
+            await record_llm_call(
+                self._session,
+                job_name="semantic_analysis",
+                prompt_name=prompt_name,
+                model=self._config.llm.model,
+                prompt_tokens=prompt_delta,
+                completion_tokens=completion_delta,
+                total_tokens=total_delta,
+            )
+        return result
 
     async def run_daily_semantic_analysis(
         self,
@@ -182,10 +213,11 @@ class SemanticAnalysisService:
         ]
         prompt = load_prompt_template("title_translation")
         try:
-            result = await self._llm.complete_structured(
+            result = await self._structured_llm(
                 prompt,
                 {"titles_json": titles_json},
                 TitleTranslationResult,
+                prompt_name="title_translation",
             )
         except LlmAdapterError:
             return
@@ -206,7 +238,7 @@ class SemanticAnalysisService:
     ) -> TrendNamingResult:
         prompt = load_prompt_template("trend_naming")
         try:
-            result = await self._llm.complete_structured(
+            result = await self._structured_llm(
                 prompt,
                 {
                     "canonical_name": trend.canonical_name,
@@ -215,6 +247,7 @@ class SemanticAnalysisService:
                     "evidence_videos_json": evidence_payload,
                 },
                 TrendNamingResult,
+                prompt_name="trend_naming",
             )
             result.evidence_content_ids = require_evidence_ids(
                 result.evidence_content_ids,
@@ -243,7 +276,7 @@ class SemanticAnalysisService:
         }
         prompt = load_prompt_template("why_trending")
         try:
-            result = await self._llm.complete_structured(
+            result = await self._structured_llm(
                 prompt,
                 {
                     "trend_name_zh": trend_name_zh,
@@ -252,6 +285,7 @@ class SemanticAnalysisService:
                     "evidence_videos_json": evidence_payload,
                 },
                 WhyTrendingResult,
+                prompt_name="why_trending",
             )
             result.evidence_content_ids = require_evidence_ids(
                 result.evidence_content_ids,
@@ -282,7 +316,7 @@ class SemanticAnalysisService:
         semantic = self._config.semantic
         prompt = load_prompt_template("creative_angles")
         try:
-            result = await self._llm.complete_structured(
+            result = await self._structured_llm(
                 prompt,
                 {
                     "trend_name_zh": trend_name_zh,
@@ -294,6 +328,7 @@ class SemanticAnalysisService:
                     "max_angles": semantic.max_angles_per_trend,
                 },
                 CreativeAnglesResult,
+                prompt_name="creative_angles",
             )
             validated: list[CreativeAngleItem] = []
             for angle in result.creative_angles:

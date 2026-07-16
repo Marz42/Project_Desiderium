@@ -254,6 +254,7 @@ class MetricSnapshot(Base):
             name="uq_metric_snapshots_content_bucket",
         ),
         Index("ix_metric_snapshots_captured_at", "captured_at"),
+        Index("ix_metric_snapshots_content_captured", "content_item_id", "captured_at"),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
@@ -640,6 +641,56 @@ class PublicationRecord(Base):
     )
 
     creative_angle: Mapped[CreativeAngle] = relationship(back_populates="publication_records")
+
+
+class WorkerHeartbeat(Base):
+    __tablename__ = "worker_heartbeats"
+
+    component: Mapped[str] = mapped_column(String(64), primary_key=True)
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    details: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True, default=dict)
+
+
+class ApiQuotaDaily(Base):
+    __tablename__ = "api_quota_daily"
+    __table_args__ = (UniqueConstraint("provider", "usage_date", name="uq_api_quota_daily_provider_date"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    provider: Mapped[str] = mapped_column(String(32), nullable=False)
+    usage_date: Mapped[date] = mapped_column(Date, nullable=False)
+    quota_used: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    search_calls: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    quota_limit: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    max_search_calls: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    exhausted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
+class LlmUsageLog(Base):
+    __tablename__ = "llm_usage_logs"
+    __table_args__ = (
+        Index("ix_llm_usage_logs_created_at", "created_at"),
+        Index("ix_llm_usage_logs_job_name", "job_name"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    job_name: Mapped[str] = mapped_column(String(64), nullable=False)
+    prompt_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    model: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    prompt_tokens: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    completion_tokens: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    total_tokens: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    cost_usd_estimate: Mapped[float | None] = mapped_column(Float, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
 
 
 class CrawlJob(Base):

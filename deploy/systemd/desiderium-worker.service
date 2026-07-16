@@ -1,0 +1,17 @@
+[Unit]
+Description=Desiderium Background Worker
+After=network.target postgresql.service desiderium-web.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=desiderium
+Group=desiderium
+WorkingDirectory=/opt/desiderium
+EnvironmentFile=/etc/desiderium/desiderium.env
+ExecStart=/opt/desiderium/.venv/bin/python -m app.worker
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
