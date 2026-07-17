@@ -30,7 +30,8 @@ docker compose -f docker-compose.prod.yml up -d --build
 
 ```bash
 curl -sS "https://${DOMAIN}/health" | jq .
-curl -sS -u manager "https://${DOMAIN}/admin/status"   # after login session
+# Session cookie auth (not Basic Auth). After browser login, reuse the session cookie:
+curl -sS -H "Cookie: session=<signed-session-cookie>" "https://${DOMAIN}/admin/status"
 ```
 
 5. Enable daily backups (optional profile):

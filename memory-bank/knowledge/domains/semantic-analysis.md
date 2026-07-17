@@ -42,7 +42,7 @@ paradigma:
 
 | Interface | Role | Path |
 |-----------|------|------|
-| `TranscriptService` | 字幕状态机 pending→success/failed/unavailable；公开字幕 → 可选 ASR → 元数据降级 | `app/services/transcripts.py` |
+| `TranscriptService` | 字幕状态机 pending→success/failed/unavailable；公开字幕 → 元数据降级（ASR 默认为 `NullAsrAdapter` 占位） | `app/services/transcripts.py` |
 | `YouTubeCaptionsFetcher` / `AsrAdapter` | 字幕来源适配 | `app/adapters/transcript/` |
 | `LlmAdapter` | OpenAI-compatible client，JSON Schema 结构化输出，重试 / 超时 / token 记录 | `app/adapters/llm/` |
 | `SemanticAnalysis` | 语义管道编排（翻译、命名、why-trending、角度生成） | `app/services/semantic_analysis.py` |

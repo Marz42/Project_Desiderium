@@ -3,7 +3,7 @@ type: paradigma-runtime-state
 title: Active Task
 description: Current active task state for the Agent session.
 tags: [runtime, active-task]
-timestamp: 2026-07-17T09:09:00+08:00
+timestamp: 2026-07-17T09:54:00+08:00
 paradigma:
   layer: runtime
   temperature: hot
@@ -17,29 +17,31 @@ paradigma:
 
 ## Task ID
 
-2026-07-17-memory-bank-overhaul
+2026-07-17-fix-migration-p0
 
 ## User Request
 
-按 Paradigma 契约要求，结合项目代码与设计，完整审查并修复 memory-bank 与 README：补齐缺失、修正错误，清除上游 Paradigma 项目历史残留。
+修复 fresh database migration P0 blocker，并给出与 project-brief 对照的审查报告。
 
 ## Current Status
 
-completed — 详见 `logs/progress/2026-07-17-memory-bank-overhaul.md`，可归档。
+completed — 迁移链修复并实测通过（v0.7.2），审查报告已交付。
 
 ## Checklist
 
-- [x] HOT 四文档重写（brief / architecture / conventions / repository contract）
-- [x] 新增四份应用契约（api / database / scheduler / deployment）
-- [x] 六份应用领域文档，删除 Paradigma 域
-- [x] ADR / known-issues / manuals / glossary / plans 重建
-- [x] progress index、changelog、旧日志清理
-- [x] README 重写与版本对齐
-- [x] pd-check-all 质量门禁通过
+- [x] 初始迁移排除后续 revision 拥有的表
+- [x] 枚举复用改 `postgresql.ENUM(..., create_type=False)`
+- [x] `ix_metric_snapshots_content_captured` 加 `if_not_exists`
+- [x] fresh PostgreSQL 16 upgrade / downgrade / re-upgrade 实测
+- [x] 75/75 pytest 通过
+- [x] known-issue 标记 Resolved，契约 / changelog / 版本号更新（0.7.2）
+- [x] 输出中文审查报告
 
 ## Relevant Knowledge
 
-- `knowledge/architecture.md`、`knowledge/contracts/`、`logs/progress/2026-07-17-memory-bank-overhaul.md`
+- `knowledge/known-issues/fresh-database-migration-fails.md`（Resolved）
+- `knowledge/contracts/data-model-contract.md`
+- `logs/progress/2026-07-17-full-project-test.md`
 
 ## Blockers
 
@@ -47,4 +49,4 @@ completed — 详见 `logs/progress/2026-07-17-memory-bank-overhaul.md`，可归
 
 ## Notes
 
-后续待办：CI 补应用 pytest（Python 3.12）。泄漏 API key 已确认吊销（见 known-issues/api-key-leak-in-shadow-cache.md）。
+剩余优先项：P1 mutex 键分离、开发 Dockerfile 补 config、CI 加 pytest + fresh migration 集成测试。

@@ -59,11 +59,15 @@ def upgrade() -> None:
     )
     op.create_index("ix_llm_usage_logs_created_at", "llm_usage_logs", ["created_at"], unique=False)
     op.create_index("ix_llm_usage_logs_job_name", "llm_usage_logs", ["job_name"], unique=False)
+    # Fresh databases already get this index from the initial revision's
+    # create_all (the index lives in current model metadata); older databases
+    # upgraded mid-chain do not. if_not_exists covers both paths.
     op.create_index(
         "ix_metric_snapshots_content_captured",
         "metric_snapshots",
         ["content_item_id", "captured_at"],
         unique=False,
+        if_not_exists=True,
     )
 
 

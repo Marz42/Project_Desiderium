@@ -3,7 +3,7 @@ type: paradigma-contract
 title: Data Model Contract
 description: PostgreSQL schema, unique constraints, and Alembic migration chain for Desiderium.
 tags: [contract, database, schema, alembic]
-timestamp: 2026-07-17T09:09:00+08:00
+timestamp: 2026-07-17T09:54:00+08:00
 paradigma:
   schema_version: "0.1"
   temperature: warm
@@ -85,10 +85,10 @@ paradigma:
 Alembic 迁移链（线性）：
 
 ```text
-83f6909e9adb (initial schema, Base.metadata.create_all)
+83f6909e9adb (initial schema, create_all 排除后续迁移的 5 张表)
   -> a1b2c3d4e5f6 (trend_score_snapshots)
   -> b2c3d4e5f6a7 (angle_status_audits)
-  -> c8d9e0f1a2b3 (ops tables + ix_metric_snapshots_content_captured)
+  -> c8d9e0f1a2b3 (ops tables + ix_metric_snapshots_content_captured, if_not_exists)
 ```
 
 Web 与 worker 容器启动时自动执行 `alembic upgrade head`。
@@ -97,7 +97,7 @@ Web 与 worker 容器启动时自动执行 `alembic upgrade head`。
 
 - 新增表、可空列、索引向后兼容。
 - 修改枚举值、唯一约束或删除列属破坏性变更。
-- initial migration 基于 `create_all`；后续变更必须写显式 op 脚本，不得再依赖 metadata 同步。
+- initial migration 基于 `create_all`，但通过 `LATER_REVISION_TABLES` 排除后续迁移拥有的表；新增表时必须写显式 op 脚本，并把表名加入该排除集合。
 - `metric_snapshots` 按 `SNAPSHOT_RETENTION_DAYS`（默认 90 天）由每日任务清理，消费者不得假设无限历史。
 
 # Breaking Change Policy

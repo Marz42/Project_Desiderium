@@ -22,7 +22,10 @@ def upgrade() -> None:
         sa.Column("score_components", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column(
             "lifecycle_status",
-            sa.Enum(
+            # The enum already exists (created by the initial revision via
+            # trend_themes); postgresql.ENUM honors create_type=False, plain
+            # sa.Enum silently ignores it and re-emits CREATE TYPE.
+            postgresql.ENUM(
                 "new",
                 "rising",
                 "stable",

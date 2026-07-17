@@ -23,7 +23,7 @@ Agent 路由指南：先读取 runtime active task，再读取本 index，根据
 * [Glossary](glossary.md) - 业务术语表。
 
 <!-- BEGIN PARADIGMA AUTO-INDEX -->
-<!-- checksum: aeb45368ce2629ed -->
+<!-- checksum: 32cab2e103d7c03c -->
 <!-- generated_by: pd-sync-index.py -->
 
 | Path | Type | Title | Hints | Symbols | Relations |
@@ -47,7 +47,10 @@ Agent 路由指南：先读取 runtime active task，再读取本 index，根据
 | [glossary.md](glossary.md) | `paradigma-glossary` | Project Glossary | 术语<br>缩写<br>业务概念 ... | - | related_to:/project-brief.md |
 | [known-issues/api-key-leak-in-shadow-cache.md](known-issues/api-key-leak-in-shadow-cache.md) | `paradigma-known-issue` | API Keys Leaked into Shadow Data Cache | 密钥泄漏<br>事故记录<br>影子缓存 ... | - | related_to:/domains/watchlist-ingestion.md |
 | [known-issues/cold-start-baseline-confidence.md](known-issues/cold-start-baseline-confidence.md) | `paradigma-known-issue` | Cold-start Channel Baselines Have Low Confidence | 冷启动<br>基准置信度<br>快照积累 ... | - | related_to:/domains/trend-engine.md |
+| [known-issues/dev-dockerfile-missing-config.md](known-issues/dev-dockerfile-missing-config.md) | `paradigma-known-issue` | Development Dockerfile Omits Runtime Config Directory | 开发镜像<br>config 缺失<br>Dockerfile ... | - | related_to:/contracts/config-deployment-contract.md<br>related_to:/domains/operations.md |
+| [known-issues/fresh-database-migration-fails.md](known-issues/fresh-database-migration-fails.md) | `paradigma-known-issue` | Fresh Database Migration Fails After Initial Revision | 全新数据库迁移失败<br>Alembic<br>部署阻断 ... | - | related_to:/contracts/data-model-contract.md<br>related_to:/contracts/config-deployment-contract.md |
 | [known-issues/shadow-validation-false-positives.md](known-issues/shadow-validation-false-positives.md) | `paradigma-known-issue` | Hindi and Manhwa High-resonance False Positives in Trend Ranking | 误报<br>语言过滤<br>影子验证 ... | - | related_to:/domains/trend-engine.md |
+| [known-issues/transcript-semantic-mutex-collision.md](known-issues/transcript-semantic-mutex-collision.md) | `paradigma-known-issue` | Transcript and Semantic Jobs Share Mutex Keys | 任务互斥<br>advisory lock<br>字幕任务 ... | - | related_to:/contracts/scheduler-jobs-contract.md<br>related_to:/domains/semantic-analysis.md |
 | [manuals/desiderium-ops.md](manuals/desiderium-ops.md) | `paradigma-manual` | Desiderium Operations Manual | 运维手册<br>部署<br>监控 ... | - | related_to:/domains/operations.md<br>related_to:/contracts/config-deployment-contract.md |
 | [manuals/desiderium-recovery.md](manuals/desiderium-recovery.md) | `paradigma-manual` | Desiderium Failure Recovery Guide | 故障恢复<br>数据库恢复<br>事故处理 ... | - | related_to:/manuals/desiderium-ops.md<br>related_to:/domains/operations.md |
 | [plans/mvp-plan.md](plans/mvp-plan.md) | `paradigma-plan` | Desiderium MVP Plan | MVP 计划<br>产品规格<br>分阶段开发 ... | TrendScore<br>BreakoutRatio<br>watch_items | related_to:/project-brief.md<br>related_to:/architecture.md |

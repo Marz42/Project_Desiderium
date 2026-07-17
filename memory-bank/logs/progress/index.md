@@ -9,3 +9,4 @@
 - [2026-07-17 Stage 7 — TikTok Experiment Adapter](2026-07-17-stage-7-tiktok-adapter.md)
 - [2026-07-17 Stage 8 — Deployment, Stability & Ops](2026-07-17-stage-8-deployment-ops.md)
 - [2026-07-17 Memory-Bank Overhaul](2026-07-17-memory-bank-overhaul.md)
+- [2026-07-17 Full Project Test and Status Audit](2026-07-17-full-project-test.md)

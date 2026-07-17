@@ -116,9 +116,11 @@ TikTok 实验数据在启用时经 `TikTokIngestionService` 进入 `content_item
 - **聚类第二 / 三层未实现**：MVP 只有规则聚类（`config/anime_entities.yaml`）；文本向量召回与 LLM 歧义裁决仍是设计目标（见 mvp-plan 第 9 节）。
 - **冷启动基准**：系统上线前 2—4 周只有低置信度估算基准，见 known-issue。
 - **影子验证误报**：Hindi / manhwa 内容触发高共振误报，语言过滤与 manager-value 惩罚待校准，见 known-issue。
-- **团队账号反馈闭环**：`published_views/likes/comments` 字段已预留但未接入自有 YouTube 账号数据。
-- **初始迁移策略**：initial revision 使用 `Base.metadata.create_all`，后续 schema 变更需改为显式 op 脚本。
+- **团队账号反馈闭环**：`publication_records` 目前只有 `published_url` / `published_at`；播放/点赞/评论反馈字段尚未建模，也未接入自有 YouTube 账号数据。
+- **任务互斥缺口**：`transcript_fetch` 与 `semantic_analysis` 共用默认 advisory lock 与 TRANSCRIPT 批次键（见 known-issue）。
+- **开发镜像缺配置**：根 `Dockerfile` 未 `COPY config/`，`docker compose` Quick Start 镜像缺少评分/LLM YAML（见 known-issue）。
 - **单管理者假设**：认证是单密码 + 签名 session cookie；多用户 / RBAC 是明确的 post-MVP 项。
+- **ASR 实际能力**：字幕链路默认为公开字幕 → 元数据降级；`NullAsrAdapter` 占位，无真实 ASR 供应商接入。
 
 # Citations
 

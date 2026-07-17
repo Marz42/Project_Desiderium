@@ -8,6 +8,11 @@
 
 ---
 
+## [0.7.2] - 2026-07-17
+
+### Fixed
+- 修复全新数据库 `alembic upgrade head` 失败的 P0 部署阻断：初始迁移 `create_all` 排除后续迁移拥有的 5 张表；`lifecycle_status` / `angle_status` 复用列改用 `postgresql.ENUM(..., create_type=False)`；`ix_metric_snapshots_content_captured` 创建改为 `if_not_exists`。fresh migration 与 downgrade/upgrade 往返在 PostgreSQL 16 实测通过。
+
 ## [0.7.1] - 2026-07-17
 
 ### Changed

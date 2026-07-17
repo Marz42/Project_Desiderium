@@ -4,6 +4,7 @@ from typing import Sequence, Union
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 revision: str = "b2c3d4e5f6a7"
 down_revision: Union[str, None] = "a1b2c3d4e5f6"
@@ -18,7 +19,9 @@ def upgrade() -> None:
         sa.Column("creative_angle_id", sa.UUID(), nullable=False),
         sa.Column(
             "from_status",
-            sa.Enum(
+            # Enum already created by the initial revision via creative_angles;
+            # postgresql.ENUM honors create_type=False, plain sa.Enum does not.
+            postgresql.ENUM(
                 "candidate",
                 "selected",
                 "adopted",
@@ -32,7 +35,7 @@ def upgrade() -> None:
         ),
         sa.Column(
             "to_status",
-            sa.Enum(
+            postgresql.ENUM(
                 "candidate",
                 "selected",
                 "adopted",
