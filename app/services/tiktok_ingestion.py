@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from typing import Any
+from typing import Any, TypedDict
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,6 +25,18 @@ from app.repositories.watchlist import CrawlJobRepository, WatchlistRepository
 from app.schemas.watchlist import watch_item_for_adapter
 
 logger = logging.getLogger(__name__)
+
+
+class TikTokCrawlSummary(TypedDict):
+    """Aggregated result of a TikTok batch crawl over watch items."""
+
+    platform: str
+    tier: str
+    total: int
+    succeeded: int
+    failed: int
+    new_items: int
+    errors: list[str]
 
 
 class TikTokIngestionService:
@@ -155,7 +167,7 @@ class TikTokIngestionService:
         *,
         tier: WatchTier | None = None,
         item_types: set[WatchItemType] | None = None,
-    ) -> dict[str, Any]:
+    ) -> TikTokCrawlSummary:
         items = await self._watchlist.list_items(
             tier=tier,
             enabled_only=True,
@@ -164,7 +176,7 @@ class TikTokIngestionService:
         if item_types:
             items = [i for i in items if i.type in item_types]
 
-        summary = {
+        summary: TikTokCrawlSummary = {
             "platform": "tiktok",
             "tier": tier.value if tier else "all",
             "total": len(items),
@@ -203,7 +215,9 @@ class TikTokIngestionService:
         return summary
 
 
-async def create_tiktok_ingestion(session: AsyncSession) -> tuple[TikTokIngestionService, TikTokAdapter]:
+async def create_tiktok_ingestion(
+    session: AsyncSession,
+) -> tuple[TikTokIngestionService, TikTokAdapter]:
     settings = get_settings()
     if not settings.tiktok_enabled:
         raise RuntimeError("TikTok adapter is disabled")

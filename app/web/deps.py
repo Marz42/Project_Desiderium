@@ -10,7 +10,7 @@ from starlette.templating import Jinja2Templates
 
 from app.config import get_settings
 from app.web.csrf import validate_csrf_token
-from app.web.session import get_csrf_token, get_session_data
+from app.web.session import get_session_data
 
 TEMPLATES = Jinja2Templates(directory=str(Path(__file__).resolve().parent / "templates"))
 

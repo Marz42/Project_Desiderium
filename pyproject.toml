@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "desiderium"
-version = "0.7.2"
+version = "0.10.0"
 description = "Anime trend intelligence system for content team briefing"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -21,12 +21,20 @@ dependencies = [
     "python-multipart>=0.0.12",
     "apscheduler>=3.10.4",
     "pyyaml>=6.0.2",
-    "pytest>=8.3.0",
-    "pytest-asyncio>=0.24.0",
 ]
 
 [project.optional-dependencies]
-dev = []
+dev = [
+    "ruff>=0.12.0",
+    "mypy>=1.16.0",
+    "types-PyYAML>=6.0.12",
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+]
+embedding = [
+    "sentence-transformers>=3.0.0",
+    "onnxruntime>=1.18.0",
+]
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -36,3 +44,23 @@ include = ["app*"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+exclude = [".paradigma", "memory-bank-template"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.12"
+check_untyped_defs = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = "apscheduler.*"
+ignore_missing_imports = true

@@ -43,7 +43,7 @@ class VideoMetricsInput:
 
 
 def _channel_id(video: VideoMetricsInput) -> str:
-    return getattr(video, "channel_external_id", None) or getattr(video, "channel_id", "")
+    return video.channel_external_id
 
 
 def parse_iso_datetime(value: str) -> datetime:
@@ -61,7 +61,12 @@ def video_age_hours(published_at: datetime, now: datetime | None = None) -> floa
     now = now or datetime.now(UTC)
     if published_at.tzinfo is None:
         published_at = published_at.replace(tzinfo=UTC)
-    return max((now - published_at).total_seconds() / 3600.0, 0.0)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=UTC)
+    return max(
+        (now.astimezone(UTC) - published_at.astimezone(UTC)).total_seconds() / 3600.0,
+        0.0,
+    )
 
 
 def assign_age_bucket(age_hours: float) -> AgeBucketKey:
@@ -82,7 +87,7 @@ def age_bucket_key_to_model(bucket: AgeBucketKey) -> AgeBucket | None:
 
 
 def age_bucket_model_to_key(bucket: AgeBucket) -> AgeBucketKey:
-    mapping = {
+    mapping: dict[AgeBucket, AgeBucketKey] = {
         AgeBucket.H0_6: "0_6h",
         AgeBucket.H6_24: "6_24h",
         AgeBucket.H24_72: "24_72h",
@@ -91,7 +96,9 @@ def age_bucket_model_to_key(bucket: AgeBucket) -> AgeBucketKey:
     return mapping[bucket]
 
 
-def cold_start_velocity(views: int, age_hours: float, *, config: ScoringConfig | None = None) -> float:
+def cold_start_velocity(
+    views: int, age_hours: float, *, config: ScoringConfig | None = None
+) -> float:
     cfg = config or get_scoring_config()
     return views / max(age_hours, cfg.min_age_hours)
 
@@ -115,7 +122,9 @@ def hour_bucket(dt: datetime) -> datetime:
     return dt.astimezone(UTC).replace(minute=0, second=0, microsecond=0)
 
 
-def snapshot_interval_hours(age_hours: float, *, config: ScoringConfig | None = None) -> float | None:
+def snapshot_interval_hours(
+    age_hours: float, *, config: ScoringConfig | None = None
+) -> float | None:
     """Return required hours between snapshots for a video age, or None if inactive."""
     cfg = config or get_scoring_config()
     if age_hours < 24:
@@ -226,8 +235,7 @@ def global_baseline_by_bucket(
         )
 
     return {
-        bucket: statistics.median(values) if values else 1.0
-        for bucket, values in grouped.items()
+        bucket: statistics.median(values) if values else 1.0 for bucket, values in grouped.items()
     }
 
 
@@ -300,12 +308,20 @@ def score_trend_cluster(
     total_views = 0
     recent_24h = 0
     recent_72h = 0
+    channels_24h: set[str] = set()
+    channels_72h: set[str] = set()
+    has_priority_or_keyword_evidence = False
 
     for member in members:
-        channel_id = member["channel_id"]
+        channel_id = str(member["channel_id"])
         tier = member.get("tier", "general")
         weight = tier_weight(tier, config=cfg)
         channels[channel_id] = max(channels.get(channel_id, 0.0), weight)
+        if tier in {"priority", "experimental"} or member.get("source_kind") in {
+            "keyword",
+            "ranking",
+        }:
+            has_priority_or_keyword_evidence = True
 
         ratio = float(member.get("capped_breakout", member.get("breakout_ratio", 1.0)))
         breakout_values.append(ratio)
@@ -319,8 +335,10 @@ def score_trend_cluster(
         age_h = video_age_hours(published, now) if published else 9999
         if age_h <= 24:
             recent_24h += 1
+            channels_24h.add(channel_id)
         if age_h <= 72:
             recent_72h += 1
+            channels_72h.add(channel_id)
 
     weighted_channel_count = sum(channels.values())
     channel_resonance = 100 * min(
@@ -369,17 +387,21 @@ def score_trend_cluster(
     )
 
     meets_standard = (
-        recent_72h >= cfg.thresholds.standard_min_videos_72h
+        len(channels_72h) >= cfg.thresholds.standard_min_channels_72h
         and breakout_ratio_ge_2_pct >= cfg.thresholds.standard_breakout_ge_2_pct
     )
     meets_early = (
-        recent_24h >= cfg.thresholds.early_min_videos_24h
+        len(channels_24h) >= cfg.thresholds.early_min_channels_24h
+        and recent_24h >= cfg.thresholds.early_min_videos_24h
         and max(breakout_values, default=0) >= cfg.thresholds.strong_breakout
+        and (has_priority_or_keyword_evidence or len(channels_24h) >= 3)
     )
 
     return {
         "trend_score": round(trend_score, 2),
         "channel_count": len(channels),
+        "channels_24h": len(channels_24h),
+        "channels_72h": len(channels_72h),
         "weighted_channel_count": round(weighted_channel_count, 2),
         "channel_resonance": round(channel_resonance, 2),
         "relative_breakout": round(relative_breakout, 2),
@@ -406,10 +428,24 @@ def compute_growth_ratio(
     return activity_last_24h / max(activity_previous_24h, cfg.epsilon)
 
 
-def cluster_activity(members: list[dict[str, Any]], *, config: ScoringConfig | None = None) -> float:
+def cluster_activity(
+    members: list[dict[str, Any]],
+    *,
+    now: datetime | None = None,
+    config: ScoringConfig | None = None,
+) -> float:
+    """Weighted activity for videos published in the last 24 hours."""
     cfg = config or get_scoring_config()
+    now = now or datetime.now(UTC)
     total = 0.0
     for member in members:
+        published = member.get("published_at")
+        if isinstance(published, str):
+            published = parse_iso_datetime(published)
+        if published is None:
+            continue
+        if video_age_hours(published, now) > 24:
+            continue
         tier = member.get("tier", "general")
         weight = tier_weight(tier, config=cfg)
         capped = float(member.get("capped_breakout", 1.0))

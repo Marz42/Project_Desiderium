@@ -50,7 +50,9 @@ async def main() -> int:
         )
         print("top sequential scan tables:")
         for row in result:
-            print(f"  {row.relname}: seq_scan={row.seq_scan} idx_scan={row.idx_scan} rows={row.n_live_tup}")
+            print(
+                f"  {row.relname}: seq_scan={row.seq_scan} idx_scan={row.idx_scan} rows={row.n_live_tup}"
+            )
 
     await engine.dispose()
     return 0

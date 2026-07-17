@@ -9,7 +9,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models import CreativeAngle, DailyCandidate, TrendTheme
+from app.models import CreativeAngle, DailyCandidate, LifecycleStatus, PublicationRecord
 
 
 class DailyCandidateRepository:
@@ -21,7 +21,9 @@ class DailyCandidateRepository:
             select(DailyCandidate)
             .where(DailyCandidate.date == candidate_date)
             .options(
-                selectinload(DailyCandidate.creative_angle).selectinload(CreativeAngle.publication_records),
+                selectinload(DailyCandidate.creative_angle)
+                .selectinload(CreativeAngle.publication_records)
+                .selectinload(PublicationRecord.metric_snapshots),
                 selectinload(DailyCandidate.trend),
             )
             .order_by(DailyCandidate.rank)
@@ -48,6 +50,9 @@ class DailyCandidateRepository:
         rank: int,
         candidate_score: float | None,
         score_snapshot: dict | None,
+        trend_score_snapshot: float | None = None,
+        lifecycle_status_snapshot: LifecycleStatus | None = None,
+        analysis_run_id: uuid.UUID | None = None,
         selected: bool = False,
     ) -> DailyCandidate:
         existing = await self.get_by_angle_and_date(creative_angle_id, candidate_date)
@@ -55,6 +60,9 @@ class DailyCandidateRepository:
             existing.rank = rank
             existing.candidate_score = candidate_score
             existing.score_snapshot = score_snapshot
+            existing.trend_score_snapshot = trend_score_snapshot
+            existing.lifecycle_status_snapshot = lifecycle_status_snapshot
+            existing.analysis_run_id = analysis_run_id
             await self._session.flush()
             return existing
 
@@ -65,6 +73,9 @@ class DailyCandidateRepository:
             rank=rank,
             candidate_score=candidate_score,
             score_snapshot=score_snapshot,
+            trend_score_snapshot=trend_score_snapshot,
+            lifecycle_status_snapshot=lifecycle_status_snapshot,
+            analysis_run_id=analysis_run_id,
             selected=selected,
         )
         self._session.add(row)
@@ -86,12 +97,11 @@ class DailyCandidateRepository:
 
     async def list_dates(self, *, limit: int = 60) -> list[date]:
         stmt = (
-            select(DailyCandidate.date)
-            .distinct()
-            .order_by(DailyCandidate.date.desc())
-            .limit(limit)
+            select(DailyCandidate.date).distinct().order_by(DailyCandidate.date.desc()).limit(limit)
         )
         return list((await self._session.scalars(stmt)).all())
 
     async def delete_for_date(self, candidate_date: date) -> None:
-        await self._session.execute(delete(DailyCandidate).where(DailyCandidate.date == candidate_date))
+        await self._session.execute(
+            delete(DailyCandidate).where(DailyCandidate.date == candidate_date)
+        )

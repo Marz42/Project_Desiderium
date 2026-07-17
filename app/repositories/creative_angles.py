@@ -6,6 +6,7 @@ import uuid
 from datetime import UTC, date, datetime, timedelta
 
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import AngleStatus, CreativeAngle, CreativeFormat, GenerationSource
@@ -81,17 +82,37 @@ class CreativeAngleRepository:
         generated_date: date,
         semantic_fingerprint: str | None,
         generation_source: GenerationSource = GenerationSource.LLM,
-    ) -> CreativeAngle:
-        angle = CreativeAngle(
-            trend_id=trend_id,
-            angle_zh=angle_zh,
-            format=format,
-            evidence_content_ids=evidence_content_ids,
-            generated_date=generated_date,
-            generation_source=generation_source,
-            semantic_fingerprint=semantic_fingerprint,
-            status=AngleStatus.CANDIDATE,
+    ) -> tuple[CreativeAngle, bool]:
+        values = {
+            "id": uuid.uuid4(),
+            "trend_id": trend_id,
+            "angle_zh": angle_zh,
+            "format": format,
+            "evidence_content_ids": evidence_content_ids,
+            "generated_date": generated_date,
+            "generation_source": generation_source,
+            "semantic_fingerprint": semantic_fingerprint,
+            "status": AngleStatus.CANDIDATE,
+        }
+        stmt = (
+            insert(CreativeAngle)
+            .values(**values)
+            .on_conflict_do_nothing(
+                constraint="uq_creative_angles_trend_date_fingerprint",
+            )
+            .returning(CreativeAngle.id)
         )
-        self._session.add(angle)
-        await self._session.flush()
-        return angle
+        angle_id = (await self._session.execute(stmt)).scalar_one_or_none()
+        if angle_id is None:
+            existing = await self._session.scalar(
+                select(CreativeAngle).where(
+                    CreativeAngle.trend_id == trend_id,
+                    CreativeAngle.generated_date == generated_date,
+                    CreativeAngle.semantic_fingerprint == semantic_fingerprint,
+                ),
+            )
+            assert existing is not None
+            return existing, False
+        angle = await self._session.get(CreativeAngle, angle_id)
+        assert angle is not None
+        return angle, True

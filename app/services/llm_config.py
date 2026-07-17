@@ -30,6 +30,7 @@ class TranscriptSettings:
     max_text_chars: int
     excerpt_chars: int
     summary_cache_ttl_seconds: int
+    unavailable_retry_days: int
     preferred_languages: tuple[str, ...]
 
 
@@ -90,6 +91,7 @@ def load_llm_config(path: Path | None = None) -> LlmConfig:
             max_text_chars=int(transcripts["max_text_chars"]),
             excerpt_chars=int(transcripts["excerpt_chars"]),
             summary_cache_ttl_seconds=int(transcripts["summary_cache_ttl_seconds"]),
+            unavailable_retry_days=int(transcripts["unavailable_retry_days"]),
             preferred_languages=tuple(str(lang) for lang in transcripts["preferred_languages"]),
         ),
         semantic=SemanticSettings(

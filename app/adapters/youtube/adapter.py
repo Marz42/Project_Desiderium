@@ -57,7 +57,12 @@ class YouTubeAdapter:
                     max_videos=max_videos,
                     raw_responses=raw_responses,
                 )
-            if item_type in (WatchItemType.KEYWORD.value, WatchItemType.ANIME.value, "keyword", "anime"):
+            if item_type in (
+                WatchItemType.KEYWORD.value,
+                WatchItemType.ANIME.value,
+                "keyword",
+                "anime",
+            ):
                 return await self._discover_keyword(
                     watch_item,
                     cursor=cursor,
@@ -91,9 +96,7 @@ class YouTubeAdapter:
     ) -> dict[str, Any]:
         channel_id = watch_item.get("external_id") or ""
         if not channel_id.startswith("UC"):
-            resolved = await self._client.resolve_channel_id(
-                watch_item.get("url") or channel_id
-            )
+            resolved = await self._client.resolve_channel_id(watch_item.get("url") or channel_id)
             if not resolved:
                 return {
                     "external_ids": [],
@@ -143,9 +146,9 @@ class YouTubeAdapter:
         config = watch_item.get("config") or {}
         query = watch_item.get("external_id") or watch_item.get("name", "")
         hours_back = config.get("search_hours_back", 72)
-        published_after = (
-            datetime.now(UTC) - timedelta(hours=hours_back)
-        ).strftime("%Y-%m-%dT%H:%M:%SZ")
+        published_after = (datetime.now(UTC) - timedelta(hours=hours_back)).strftime(
+            "%Y-%m-%dT%H:%M:%SZ"
+        )
 
         video_ids, next_token, raw = await self._client.search_videos(
             query,
@@ -199,7 +202,12 @@ class YouTubeAdapter:
         url_or_id: str,
         name: str,
     ) -> str:
-        if item_type in (WatchItemType.KEYWORD.value, WatchItemType.ANIME.value, "keyword", "anime"):
+        if item_type in (
+            WatchItemType.KEYWORD.value,
+            WatchItemType.ANIME.value,
+            "keyword",
+            "anime",
+        ):
             return normalize_keyword_external_id(url_or_id or name)
         if url_or_id.startswith("UC") and len(url_or_id) == 24:
             return url_or_id

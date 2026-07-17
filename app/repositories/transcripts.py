@@ -47,6 +47,19 @@ class TranscriptRepository:
                 result[row.content_item_id] = row
         return result
 
+    async def has_pending_for_contents(self, content_item_ids: list[uuid.UUID]) -> bool:
+        if not content_item_ids:
+            return False
+        stmt = (
+            select(Transcript.id)
+            .where(
+                Transcript.content_item_id.in_(content_item_ids),
+                Transcript.status == TranscriptStatus.PENDING,
+            )
+            .limit(1)
+        )
+        return (await self._session.scalar(stmt)) is not None
+
     async def upsert_pending(
         self,
         content_item_id: uuid.UUID,
@@ -70,10 +83,15 @@ class TranscriptRepository:
                     "error": None,
                     "updated_at": now,
                 },
+                where=Transcript.status != TranscriptStatus.SUCCESS,
             )
             .returning(Transcript.id)
         )
-        row_id = (await self._session.execute(stmt)).scalar_one()
+        row_id = (await self._session.execute(stmt)).scalar_one_or_none()
+        if row_id is None:
+            existing = await self.get_for_content(content_item_id, source)
+            assert existing is not None
+            return existing
         row = await self._session.get(Transcript, row_id)
         assert row is not None
         return row

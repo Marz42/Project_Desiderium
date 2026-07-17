@@ -5,8 +5,9 @@ from __future__ import annotations
 import logging
 import uuid
 from datetime import UTC, date, datetime
-from typing import Any
+from typing import Any, TypeVar
 
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -22,18 +23,25 @@ from app.repositories.trends import TrendsRepository
 from app.schemas.semantic import (
     CreativeAngleItem,
     CreativeAnglesResult,
-    TitleTranslationItem,
     TitleTranslationResult,
     TrendNamingResult,
     WhyTrendingResult,
 )
 from app.services.angle_dedup import filter_unique_angles, semantic_fingerprint
 from app.services.evidence import require_evidence_ids, validate_evidence_ids
+from app.services.llm_config import (
+    LlmConfig,
+    LlmSettings,
+    PromptTemplate,
+    get_llm_config,
+    load_prompt_template,
+)
 from app.services.llm_usage import record_llm_call
-from app.services.llm_config import LlmConfig, LlmSettings, get_llm_config, load_prompt_template
 from app.services.transcripts import TranscriptService
 
 logger = logging.getLogger(__name__)
+
+TModel = TypeVar("TModel", bound=BaseModel)
 
 
 class SemanticAnalysisService:
@@ -62,12 +70,12 @@ class SemanticAnalysisService:
 
     async def _structured_llm(
         self,
-        prompt,
+        prompt: PromptTemplate,
         variables: dict[str, Any],
-        result_model: type,
+        result_model: type[TModel],
         *,
         prompt_name: str,
-    ):
+    ) -> TModel:
         before = self._llm.usage.model_copy()
         result = await self._llm.complete_structured(
             prompt,
@@ -103,10 +111,14 @@ class SemanticAnalysisService:
         angles_created = 0
         llm_failures = 0
         low_confidence = 0
+        deferred_for_transcript = 0
 
         for trend in trends:
             try:
                 result = await self.analyze_trend(trend, analysis_date=analysis_date)
+                if result.get("deferred"):
+                    deferred_for_transcript += 1
+                    continue
                 analyzed += 1
                 angles_created += int(result.get("angles_created", 0))
                 if result.get("low_confidence"):
@@ -135,6 +147,7 @@ class SemanticAnalysisService:
             "angles_created": angles_created,
             "llm_failures": llm_failures,
             "low_confidence_trends": low_confidence,
+            "deferred_for_transcript": deferred_for_transcript,
             "llm_usage": self._llm.usage.model_dump(),
             "daily_candidates": candidate_summary,
         }
@@ -150,6 +163,10 @@ class SemanticAnalysisService:
             return {"angles_created": 0, "low_confidence": True}
 
         content_items = [m.content_item for m in members if m.content_item is not None]
+        if await self._transcript_repo.has_pending_for_contents(
+            [item.id for item in content_items],
+        ):
+            return {"angles_created": 0, "deferred": True}
         allowed_ids = {str(item.id) for item in content_items}
         evidence_payload = await self._build_evidence_payload(content_items)
         has_captions = any(e.get("has_captions") for e in evidence_payload)
@@ -188,13 +205,17 @@ class SemanticAnalysisService:
         )
 
         trend.summary_zh = why.why_trending_zh
-        if naming.trend_name_zh and naming.confidence >= self._config.semantic.low_confidence_threshold:
+        if (
+            naming.trend_name_zh
+            and naming.confidence >= self._config.semantic.low_confidence_threshold
+        ):
             trend.canonical_name = naming.trend_name_zh
         trend.updated_at = datetime.now(UTC)
 
         return {
             "angles_created": angles_created,
-            "low_confidence": low_confidence or naming.confidence < self._config.semantic.low_confidence_threshold,
+            "low_confidence": low_confidence
+            or naming.confidence < self._config.semantic.low_confidence_threshold,
             "has_captions": has_captions,
         }
 
@@ -389,7 +410,7 @@ class SemanticAnalysisService:
             if not ids:
                 continue
             fmt = self._parse_format(str(item.get("format") or "both"))
-            await self._angles.create_angle(
+            _, was_created = await self._angles.create_angle(
                 trend_id=trend.id,
                 angle_zh=str(item["angle_zh"]),
                 format=fmt,
@@ -397,7 +418,7 @@ class SemanticAnalysisService:
                 generated_date=analysis_date,
                 semantic_fingerprint=semantic_fingerprint(str(item["angle_zh"])),
             )
-            created += 1
+            created += int(was_created)
         return created
 
     async def _build_evidence_payload(
@@ -442,7 +463,10 @@ class SemanticAnalysisService:
         stmt = (
             select(TrendMember)
             .options(selectinload(TrendMember.content_item))
-            .where(TrendMember.trend_id == trend_id)
+            .where(
+                TrendMember.trend_id == trend_id,
+                TrendMember.active.is_(True),
+            )
         )
         return list((await self._session.scalars(stmt)).all())
 

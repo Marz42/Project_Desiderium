@@ -2,8 +2,8 @@
 
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision: str = "a1b2c3d4e5f6"
@@ -47,7 +47,9 @@ def upgrade() -> None:
         ),
         sa.ForeignKeyConstraint(["trend_id"], ["trend_themes.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("trend_id", "snapshot_date", name="uq_trend_score_snapshots_trend_date"),
+        sa.UniqueConstraint(
+            "trend_id", "snapshot_date", name="uq_trend_score_snapshots_trend_date"
+        ),
     )
     op.create_index(
         "ix_trend_score_snapshots_snapshot_date",

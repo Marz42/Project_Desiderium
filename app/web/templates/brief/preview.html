@@ -12,12 +12,24 @@
       <input type="hidden" name="brief_date" value="{{ brief_date.isoformat() }}">
       <button type="submit" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-sm">同步入选</button>
     </form>
+    <form method="post" action="/brief/finalize">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="hidden" name="brief_date" value="{{ brief_date.isoformat() }}">
+      <button type="submit" class="px-3 py-2 rounded-lg bg-amber-700 hover:bg-amber-600 text-sm">固化内容</button>
+    </form>
     <a href="/brief/export/markdown?d={{ brief_date.isoformat() }}"
        class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-sm">下载 Markdown</a>
     <a href="/brief/export/html?d={{ brief_date.isoformat() }}"
        class="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-sm">下载 HTML</a>
   </div>
 </div>
+
+{% if brief.finalized_snapshot %}
+<div class="mb-4 px-4 py-3 rounded-lg border border-amber-800 bg-amber-950/40 text-amber-200 text-sm">
+  内容已固化（{{ brief.finalized_at.strftime('%Y-%m-%d %H:%M') if brief.finalized_at else '' }}），
+  导出将使用固化快照，不受后续数据变化影响。哈希：<code class="text-xs">{{ brief.finalized_content_hash[:12] if brief.finalized_content_hash else '' }}…</code>
+</div>
+{% endif %}
 
 {% if not sections %}
 <div class="text-center py-16 text-slate-400">

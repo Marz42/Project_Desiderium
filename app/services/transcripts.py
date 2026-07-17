@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import uuid
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from sqlalchemy import select
@@ -14,7 +14,14 @@ from sqlalchemy.orm import selectinload
 
 from app.adapters.transcript.asr import AsrAdapter, NullAsrAdapter
 from app.adapters.transcript.youtube_captions import YouTubeCaptionsFetcher
-from app.models import ContentItem, Platform, TranscriptSource, TranscriptStatus, WatchItem, WatchTier
+from app.models import (
+    ContentItem,
+    Platform,
+    TranscriptSource,
+    TranscriptStatus,
+    WatchItem,
+    WatchTier,
+)
 from app.repositories.transcripts import TranscriptRepository
 from app.services.llm_config import LlmConfig, get_llm_config
 
@@ -80,7 +87,9 @@ class TranscriptService:
         pending = await self._repo.upsert_pending(item.id, TranscriptSource.PUBLIC_CAPTION)
 
         if item.platform != Platform.YOUTUBE:
-            await self._repo.mark_unavailable(pending.id, error="platform does not support public captions")
+            await self._repo.mark_unavailable(
+                pending.id, error="platform does not support public captions"
+            )
             return TranscriptStatus.UNAVAILABLE
 
         try:
@@ -116,10 +125,14 @@ class TranscriptService:
                 language=asr_result.language,
                 confidence=asr_result.confidence,
             )
-            await self._repo.mark_unavailable(pending.id, error="public captions unavailable; used ASR")
+            await self._repo.mark_unavailable(
+                pending.id, error="public captions unavailable; used ASR"
+            )
             return TranscriptStatus.SUCCESS
 
-        await self._repo.mark_unavailable(pending.id, error="no public captions; metadata-only fallback")
+        await self._repo.mark_unavailable(
+            pending.id, error="no public captions; metadata-only fallback"
+        )
         return TranscriptStatus.UNAVAILABLE
 
     def build_excerpt(self, item: ContentItem, transcript_text: str | None) -> TranscriptExcerpt:
@@ -197,11 +210,18 @@ class TranscriptService:
                 due.append(item)
         return due
 
-    @staticmethod
-    def _needs_fetch(item: ContentItem) -> bool:
+    def _needs_fetch(self, item: ContentItem) -> bool:
         if not item.transcripts:
             return True
+        if any(t.status == TranscriptStatus.SUCCESS for t in item.transcripts):
+            return False
         for transcript in item.transcripts:
             if transcript.status in {TranscriptStatus.PENDING, TranscriptStatus.FAILED}:
                 return True
-        return not any(t.status == TranscriptStatus.SUCCESS for t in item.transcripts)
+            if transcript.status == TranscriptStatus.UNAVAILABLE:
+                retry_after = transcript.updated_at + timedelta(
+                    days=self._config.transcripts.unavailable_retry_days,
+                )
+                if datetime.now(UTC) >= retry_after:
+                    return True
+        return False

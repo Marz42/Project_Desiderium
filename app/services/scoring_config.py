@@ -34,8 +34,9 @@ class ThresholdConfig:
     rising_ratio: float
     declining_ratio: float
     reviving_ratio: float
-    standard_min_videos_72h: int
+    standard_min_channels_72h: int
     standard_breakout_ge_2_pct: float
+    early_min_channels_24h: int
     early_min_videos_24h: int
     dormant_hours_no_video: int
     min_cluster_members: int
@@ -98,7 +99,61 @@ class LifecycleConfig:
 
 
 @dataclass(frozen=True)
+class CandidateConfig:
+    target_count: int
+    maximum_count: int
+    max_angles_per_trend: int
+    max_anime_share: float
+    min_new_trend_share: float
+
+
+@dataclass(frozen=True)
+class RelevanceConfig:
+    allowed_language_prefixes: tuple[str, ...]
+    unknown_language_policy: str
+    excluded_language_keywords: tuple[str, ...]
+    excluded_topic_keywords: tuple[str, ...]
+    generic_topic_keywords: tuple[str, ...]
+    excluded_score_multiplier: float
+    generic_score_multiplier: float
+
+
+@dataclass(frozen=True)
+class PublicationConfig:
+    team_channel_ids: tuple[str, ...]
+    windows_hours: tuple[int, ...]
+    late_backfill_grace_hours: float
+    baseline_version: str
+    max_consecutive_failures: int
+    retry_backoff_hours: float
+
+
+@dataclass(frozen=True)
+class EmbeddingProviderConfig:
+    provider: str
+    embedding_space: str
+    model_name: str
+    model_revision: str
+    remote_base_url: str
+    remote_model: str
+    allow_lexical_fallback: bool
+    cache_enabled: bool
+
+
+@dataclass(frozen=True)
+class ClusteringConfig:
+    enabled: bool
+    max_publish_gap_days: int
+    recall_top_k: int
+    high_similarity: float
+    low_similarity: float
+    llm_min_confidence: float
+    embedding: EmbeddingProviderConfig
+
+
+@dataclass(frozen=True)
 class ScoringConfig:
+    version: str
     weights: ScoringWeights
     thresholds: ThresholdConfig
     channels: ChannelWeights
@@ -108,6 +163,10 @@ class ScoringConfig:
     novelty: NoveltyConfig
     relative_breakout: RelativeBreakoutConfig
     lifecycle: LifecycleConfig
+    candidates: CandidateConfig
+    relevance: RelevanceConfig
+    clustering: ClusteringConfig
+    publication: PublicationConfig
     target_channel_count: float
     capped_breakout_max: float
     epsilon: float
@@ -150,8 +209,20 @@ def load_scoring_config(path: Path | None = None) -> ScoringConfig:
     novelty = _section(raw, "novelty")
     relative_breakout = _section(raw, "relative_breakout")
     lifecycle = _section(raw, "lifecycle")
+    candidates = _section(raw, "candidates")
+    relevance = _section(raw, "relevance")
+    publication = raw.get("publication") or {}
+    if not isinstance(publication, dict):
+        raise ValueError("config section 'publication' must be a mapping")
+    clustering_raw = raw.get("clustering") or {}
+    if not isinstance(clustering_raw, dict):
+        raise ValueError("config section 'clustering' must be a mapping")
+    embedding_raw = clustering_raw.get("embedding") or {}
+    if not isinstance(embedding_raw, dict):
+        raise ValueError("config section 'clustering.embedding' must be a mapping")
 
     return ScoringConfig(
+        version=str(raw["version"]),
         weights=ScoringWeights(
             channel_resonance=float(scoring["channel_resonance_weight"]),
             relative_breakout=float(scoring["relative_breakout_weight"]),
@@ -169,8 +240,19 @@ def load_scoring_config(path: Path | None = None) -> ScoringConfig:
             rising_ratio=float(thresholds["rising_ratio"]),
             declining_ratio=float(thresholds["declining_ratio"]),
             reviving_ratio=float(thresholds["reviving_ratio"]),
-            standard_min_videos_72h=int(thresholds["standard_min_videos_72h"]),
+            standard_min_channels_72h=int(
+                thresholds.get(
+                    "standard_min_channels_72h",
+                    thresholds.get("standard_min_videos_72h", 3),
+                ),
+            ),
             standard_breakout_ge_2_pct=float(thresholds["standard_breakout_ge_2_pct"]),
+            early_min_channels_24h=int(
+                thresholds.get(
+                    "early_min_channels_24h",
+                    thresholds.get("early_min_videos_24h", 2),
+                ),
+            ),
             early_min_videos_24h=int(thresholds["early_min_videos_24h"]),
             dormant_hours_no_video=int(thresholds["dormant_hours_no_video"]),
             min_cluster_members=int(thresholds["min_cluster_members"]),
@@ -216,6 +298,66 @@ def load_scoring_config(path: Path | None = None) -> ScoringConfig:
         lifecycle=LifecycleConfig(
             new_max_age_hours=float(lifecycle["new_max_age_hours"]),
             dormant_activity_threshold=float(lifecycle["dormant_activity_threshold"]),
+        ),
+        candidates=CandidateConfig(
+            target_count=int(candidates["target_count"]),
+            maximum_count=int(candidates["maximum_count"]),
+            max_angles_per_trend=int(candidates["max_angles_per_trend"]),
+            max_anime_share=float(candidates["max_anime_share"]),
+            min_new_trend_share=float(candidates["min_new_trend_share"]),
+        ),
+        relevance=RelevanceConfig(
+            allowed_language_prefixes=tuple(
+                str(value).lower() for value in relevance["allowed_language_prefixes"]
+            ),
+            unknown_language_policy=str(relevance["unknown_language_policy"]),
+            excluded_language_keywords=tuple(
+                str(value).lower() for value in relevance["excluded_language_keywords"]
+            ),
+            excluded_topic_keywords=tuple(
+                str(value).lower() for value in relevance["excluded_topic_keywords"]
+            ),
+            generic_topic_keywords=tuple(
+                str(value).lower() for value in relevance["generic_topic_keywords"]
+            ),
+            excluded_score_multiplier=float(relevance["excluded_score_multiplier"]),
+            generic_score_multiplier=float(relevance["generic_score_multiplier"]),
+        ),
+        clustering=ClusteringConfig(
+            enabled=bool(clustering_raw.get("enabled", True)),
+            max_publish_gap_days=int(clustering_raw.get("max_publish_gap_days", 7)),
+            recall_top_k=int(clustering_raw.get("recall_top_k", 5)),
+            high_similarity=float(clustering_raw.get("high_similarity", 0.88)),
+            low_similarity=float(clustering_raw.get("low_similarity", 0.72)),
+            llm_min_confidence=float(clustering_raw.get("llm_min_confidence", 0.80)),
+            embedding=EmbeddingProviderConfig(
+                provider=str(embedding_raw.get("provider", "lexical")),
+                embedding_space=str(
+                    embedding_raw.get("embedding_space", "lexical:char-ngram-v1"),
+                ),
+                model_name=str(
+                    embedding_raw.get("model_name", "sentence-transformers/all-MiniLM-L6-v2"),
+                ),
+                model_revision=str(embedding_raw.get("model_revision", "main")),
+                remote_base_url=str(embedding_raw.get("remote_base_url") or ""),
+                remote_model=str(embedding_raw.get("remote_model") or ""),
+                allow_lexical_fallback=bool(embedding_raw.get("allow_lexical_fallback", True)),
+                cache_enabled=bool(embedding_raw.get("cache_enabled", True)),
+            ),
+        ),
+        publication=PublicationConfig(
+            team_channel_ids=tuple(
+                str(value) for value in publication.get("team_channel_ids") or []
+            ),
+            windows_hours=tuple(
+                int(value) for value in publication.get("windows_hours") or [0, 24, 72, 168]
+            ),
+            late_backfill_grace_hours=float(publication.get("late_backfill_grace_hours", 6)),
+            baseline_version=str(
+                publication.get("baseline_version", "publication-velocity-v1"),
+            ),
+            max_consecutive_failures=int(publication.get("max_consecutive_failures", 3)),
+            retry_backoff_hours=float(publication.get("retry_backoff_hours", 24)),
         ),
         target_channel_count=float(scoring["target_channel_count"]),
         capped_breakout_max=float(scoring["capped_breakout_max"]),

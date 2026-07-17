@@ -2,7 +2,7 @@
 
 *Anime trend intelligence system — 面向番剧解说团队的趋势发现与选题辅助系统*
 
-当前版本：`0.7.2`（见根目录 `VERSION`）
+当前版本：`0.10.0`（见根目录 `VERSION`）
 
 系统每日从管理者维护的 YouTube 频道 / 关键词 / 作品监控列表采集内容，通过 **跨频道共振 × 相对频道基准表现异常** 判断热门题材，用 LLM 生成中文趋势解释与创作方向，最终产出约 30 个候选，供管理者审核并导出 Markdown / HTML 简报。
 
@@ -60,8 +60,8 @@ docker compose -f docker-compose.prod.yml up -d --build
 ```text
 app/            # 应用源码：web / jobs → services → domain；adapters / repositories
 config/         # 算法阈值、LLM、TikTok、prompts（评分参数全部在 scoring.yaml）
-migrations/     # Alembic 迁移（容器启动自动 upgrade head）
-tests/          # pytest 单测（不调用真实外部 API）
+migrations/     # Alembic 迁移（Compose migrate 服务单次 upgrade head）
+tests/          # pytest 单元/集成测试（CI 不调用真实外部 API）
 scripts/        # 备份 / 恢复 / 磁盘监控 / 影子验证
 deploy/         # Caddy、systemd
 memory-bank/    # Agent 长期记忆（见下节）

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from typing import Any
+from typing import Any, TypedDict
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,6 +23,17 @@ from app.repositories.watchlist import CrawlJobRepository, WatchlistRepository
 from app.schemas.watchlist import watch_item_for_adapter
 
 logger = logging.getLogger(__name__)
+
+
+class CrawlSummary(TypedDict):
+    """Aggregated result of a batch crawl over watch items."""
+
+    tier: str
+    total: int
+    succeeded: int
+    failed: int
+    new_items: int
+    errors: list[str]
 
 
 class IngestionService:
@@ -147,12 +158,12 @@ class IngestionService:
         tier: WatchTier,
         *,
         item_types: set[WatchItemType] | None = None,
-    ) -> dict[str, Any]:
+    ) -> CrawlSummary:
         items = await self._watchlist.list_items(tier=tier, enabled_only=True)
         if item_types:
             items = [i for i in items if i.type in item_types]
 
-        summary = {
+        summary: CrawlSummary = {
             "tier": tier.value,
             "total": len(items),
             "succeeded": 0,
@@ -188,7 +199,9 @@ class IngestionService:
         return summary
 
 
-async def create_youtube_ingestion(session: AsyncSession) -> tuple[IngestionService, YouTubeAdapter]:
+async def create_youtube_ingestion(
+    session: AsyncSession,
+) -> tuple[IngestionService, YouTubeAdapter]:
     settings = get_settings()
     client = YouTubeClient(
         settings.youtube_api_key,

@@ -3,7 +3,7 @@ type: paradigma-contract
 title: Config and Deployment Contract
 description: Environment variables, runtime YAML configuration, and production deployment topology for Desiderium.
 tags: [contract, config, deployment, docker, secrets]
-timestamp: 2026-07-17T09:09:00+08:00
+timestamp: 2026-07-17T11:16:00+08:00
 paradigma:
   schema_version: "0.1"
   temperature: warm
@@ -57,7 +57,7 @@ paradigma:
 
 | File | Content |
 |------|---------|
-| `scoring.yaml` | 全部评分权重、阈值、年龄桶间隔、频道权重、生命周期规则、平台置信度 |
+| `scoring.yaml` | 评分权重/阈值、生命周期、候选数量/多样性、目标语言与题材相关性规则；`publication:` 段（G4）配置 `team_channel_ids`（团队基准频道 external_id 列表，默认空）、`windows_hours`（发布后指标回收窗口，默认 `[0, 24, 72, 168]`，首项必须为 0 且严格递增）、`late_backfill_grace_hours`（延迟补采宽限期，默认 6） |
 | `anime_entities.yaml` | 规则聚类的动漫实体词典（作品 / 别名 / 角色 / 篇章） |
 | `llm.yaml` | LLM 调用参数（重试 / 超时 / schema） |
 | `tiktok.yaml` | 页面选择器版本隔离配置 |
@@ -69,7 +69,7 @@ paradigma:
 
 # Response Schema
 
-不适用。配置错误在进程启动或首次任务运行时以异常暴露。
+Web 与 worker 启动时统一执行 `validate_runtime_config()`；缺文件、YAML/schema 错误、权重和阈值关系错误、prompt 缺失、候选参数越界会 fail-fast。生产环境拒绝默认/过短 `SECRET_KEY`、空 `MANAGER_PASSWORD` 及启用 TikTok 时缺失 cookie。
 
 # State Transitions
 
@@ -78,9 +78,10 @@ paradigma:
 ```text
 Internet -> caddy (80/443, ACME TLS) -> web (uvicorn x2 workers, expose 8000)
 postgres (16-alpine, healthcheck, postgres_data volume)
+migrate (一次性 alembic upgrade head，成功后解锁 web/worker)
 worker (python -m app.worker)
 backup (optional profile: daily scripts/backup.sh, ./backups volume)
-web/worker 启动命令均先 alembic upgrade head
+web/worker 不并发执行迁移
 ```
 
 主机部署备选：`deploy/systemd/desiderium-{web,worker}.service` + 自备反向代理。
@@ -90,6 +91,7 @@ web/worker 启动命令均先 alembic upgrade head
 - 新增带默认值的环境变量与 YAML 键向后兼容；重命名或删除属破坏性变更。
 - 修改 `scoring.yaml` 权重 / 阈值不是代码变更，但必须在 golden dataset 上回归并记录修改原因（见 conventions）。
 - 密钥只存在于 `.env`（gitignored）；镜像与仓库中不得出现密钥。
+- `config/` 中只允许非敏感、版本化运行配置并同时打入开发/生产镜像；`.dockerignore` 必须排除 `.env`、cache、测试与 memory-bank。
 - 备份产物 `backups/desiderium-<UTC>.sql.gz`，恢复流程见 `RECOVERY.md`。
 
 # Breaking Change Policy

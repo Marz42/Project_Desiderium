@@ -12,8 +12,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db import get_db
 from app.models import AngleStatus
 from app.repositories.creative_angles import CreativeAngleRepository
+from app.repositories.daily_candidates import DailyCandidateRepository
 from app.services.admin_candidates import AdminCandidatesService
-from app.services.angle_status import AngleStatusService, InvalidStatusTransition
+from app.services.angle_status import (
+    AngleStatusService,
+    InvalidStatusTransition,
+    PublishedUrlChangeConflict,
+    PublishedUrlConflict,
+    PublishedUrlRequired,
+)
 from app.web.deps import TEMPLATES, flash_redirect, verify_csrf
 from app.web.session import get_csrf_token
 
@@ -112,6 +119,15 @@ async def update_angle_status(
     except ValueError:
         return flash_redirect("/candidates", "无效状态", error=True)
 
+    url = f"/candidates?d={candidate_date}" if candidate_date else "/candidates"
+
+    daily_candidate_id = None
+    if candidate_date:
+        daily = await DailyCandidateRepository(db).get_by_angle_and_date(
+            angle_id, date.fromisoformat(candidate_date)
+        )
+        daily_candidate_id = daily.id if daily else None
+
     status_svc = AngleStatusService(db)
     try:
         await status_svc.transition(
@@ -119,10 +135,20 @@ async def update_angle_status(
             target,
             note=note.strip() or None,
             published_url=published_url.strip() or None,
+            daily_candidate_id=daily_candidate_id,
         )
         await db.commit()
     except InvalidStatusTransition as exc:
-        return flash_redirect("/candidates", str(exc), error=True)
+        return flash_redirect(url, str(exc), error=True)
+    except PublishedUrlRequired:
+        return flash_redirect(
+            url,
+            "标记发布需要有效的 YouTube 链接（watch / shorts / youtu.be）",
+            error=True,
+        )
+    except PublishedUrlConflict:
+        return flash_redirect(url, "该 YouTube 视频已绑定到其他创作方向", error=True)
+    except PublishedUrlChangeConflict:
+        return flash_redirect(url, "该方向已发布，不能更换为另一个 YouTube 视频", error=True)
 
-    url = f"/candidates?d={candidate_date}" if candidate_date else "/candidates"
     return flash_redirect(url, f"状态已更新为 {target.value}")

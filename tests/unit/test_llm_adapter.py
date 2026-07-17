@@ -41,7 +41,15 @@ def test_render_prompt_missing_variable_raises() -> None:
 
 def test_extract_content_parses_openai_shape() -> None:
     raw = {
-        "choices": [{"message": {"content": json.dumps({"trend_name_zh": "测试", "evidence_content_ids": ["1"], "confidence": 0.8})}}],
+        "choices": [
+            {
+                "message": {
+                    "content": json.dumps(
+                        {"trend_name_zh": "测试", "evidence_content_ids": ["1"], "confidence": 0.8}
+                    )
+                }
+            }
+        ],
         "usage": {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15},
     }
     content = LlmAdapter._extract_content(raw)
@@ -50,7 +58,13 @@ def test_extract_content_parses_openai_shape() -> None:
 
 
 def test_load_prompt_templates_exist() -> None:
-    for name in ("title_translation", "trend_naming", "why_trending", "creative_angles", "format_classification"):
+    for name in (
+        "title_translation",
+        "trend_naming",
+        "why_trending",
+        "creative_angles",
+        "format_classification",
+    ):
         prompt = load_prompt_template(name)
         assert prompt.version
         assert prompt.output_schema.get("type") == "object"

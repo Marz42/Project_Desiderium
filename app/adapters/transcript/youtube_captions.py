@@ -55,7 +55,9 @@ class YouTubeCaptionsFetcher:
             "Accept-Language": "en-US,en;q=0.9",
         }
         try:
-            with httpx.Client(timeout=self._timeout, headers=headers, follow_redirects=True) as client:
+            with httpx.Client(
+                timeout=self._timeout, headers=headers, follow_redirects=True
+            ) as client:
                 response = client.get(watch_url)
                 response.raise_for_status()
                 html = response.text

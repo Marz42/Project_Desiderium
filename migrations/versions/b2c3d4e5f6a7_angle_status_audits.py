@@ -48,7 +48,12 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("note", sa.Text(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(["creative_angle_id"], ["creative_angles.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )

@@ -50,7 +50,17 @@
     {% if angle.manager_note %}
     <p class="text-sm text-slate-300 mt-2">备注：{{ angle.manager_note }}</p>
     {% endif %}
-    {% if entry.publication and entry.publication.published_url %}
+    {% if entry.published_url %}
+    <p class="text-sm mt-2">
+      <a href="{{ entry.published_url }}" target="_blank" class="text-blue-400 hover:underline">发布链接</a>
+      {% if entry.latest_performance %}
+      <span class="ml-2 text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+        {{ entry.latest_performance.window_key }} PerformanceRatio {{ '%.2f'|format(entry.latest_performance.performance_ratio) }}
+        {% if entry.latest_performance.baseline_confidence %}（置信度 {{ entry.latest_performance.baseline_confidence }}）{% endif %}
+      </span>
+      {% endif %}
+    </p>
+    {% elif entry.publication and entry.publication.published_url %}
     <p class="text-sm mt-2">
       <a href="{{ entry.publication.published_url }}" target="_blank" class="text-blue-400 hover:underline">发布链接</a>
     </p>

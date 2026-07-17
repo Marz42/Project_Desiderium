@@ -7,16 +7,28 @@ from datetime import datetime
 from typing import Literal
 
 from app.domain.trend_metrics import (
-    AGE_BUCKETS,
     Tier,
-    assign_age_bucket,
+)
+from app.domain.trend_metrics import (
+    assign_age_bucket as _assign_age_bucket,
+)
+from app.domain.trend_metrics import (
     breakout_ratio as _breakout_ratio,
-    cold_start_velocity,
+)
+from app.domain.trend_metrics import (
+    cold_start_velocity as _cold_start_velocity,
+)
+from app.domain.trend_metrics import (
     compute_channel_baselines as _compute_channel_baselines,
+)
+from app.domain.trend_metrics import (
     global_baseline_by_bucket as _global_baseline_by_bucket,
-    parse_iso_datetime,
-    score_trend_cluster,
-    video_age_hours,
+)
+from app.domain.trend_metrics import (
+    parse_iso_datetime as _parse_iso_datetime,
+)
+from app.domain.trend_metrics import (
+    score_trend_cluster as _score_trend_cluster,
 )
 from app.services.scoring_config import get_scoring_config
 
@@ -27,6 +39,12 @@ EPSILON = _cfg.epsilon
 MIN_AGE_HOURS = _cfg.min_age_hours
 BASELINE_SAMPLE_SIZE = _cfg.baselines.sample_size
 CAPPED_BREAKOUT = _cfg.capped_breakout_max
+
+# Public compatibility aliases used by Stage 1 scripts and tests.
+assign_age_bucket = _assign_age_bucket
+cold_start_velocity = _cold_start_velocity
+parse_iso_datetime = _parse_iso_datetime
+score_trend_cluster = _score_trend_cluster
 
 TIER_WEIGHTS: dict[Tier, float] = {
     "priority": _cfg.channels.priority,
@@ -46,6 +64,7 @@ class VideoRecord:
     likes: int | None
     comments: int | None
     duration_seconds: int
+    language: str | None = None
     tier: Tier = "priority"
     url: str = ""
 

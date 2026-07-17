@@ -88,6 +88,26 @@ async def sync_brief(
     return flash_redirect(f"/brief?d={brief_date}", "已从今日入选同步简报")
 
 
+@router.post("/finalize")
+async def finalize_brief(
+    request: Request,
+    brief_date: str = Form(...),
+    csrf_token: str = Form(""),
+    db: AsyncSession = Depends(get_db),
+):
+    verify_csrf(request, form_token=csrf_token)
+    service = BriefExportService(db)
+    finalized = await service.finalize_brief(
+        date.fromisoformat(brief_date),
+        finalized_by="admin",
+    )
+    if finalized is None:
+        return flash_redirect(
+            f"/brief?d={brief_date}", "没有可固化的内容，请先同步入选方向", error=True
+        )
+    return flash_redirect(f"/brief?d={brief_date}", "简报内容已固化，导出将使用固化快照")
+
+
 @router.get("/export/markdown")
 async def export_markdown(d: str | None = None, db: AsyncSession = Depends(get_db)):
     brief_date = date.fromisoformat(d) if d else date.today()

@@ -8,7 +8,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.adapters.youtube import YouTubeAdapter, YouTubeClient
 from app.config import Settings, get_settings
 from app.models import Platform, WatchItemType, WatchTier
-from app.repositories.content import ContentRepository
 from app.repositories.watchlist import WatchlistRepository
 from app.schemas.watchlist import (
     MAX_WATCH_ITEMS,

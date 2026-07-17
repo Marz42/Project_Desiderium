@@ -3,7 +3,7 @@ type: paradigma-known-issue
 title: Development Dockerfile Omits Runtime Config Directory
 description: Root Dockerfile used by docker compose does not COPY config/, so scoring/LLM/prompt YAML are absent from the development image.
 tags: [known-issue, docker, config, deployment]
-timestamp: 2026-07-17T09:43:00+08:00
+timestamp: 2026-07-17T11:16:00+08:00
 paradigma:
   schema_version: "0.1"
   temperature: cold
@@ -46,8 +46,10 @@ paradigma:
 
 # Permanent Fix
 
-- 根 `Dockerfile` 增加 `COPY config ./config`（必要时同步 `scripts/`）。
-- 在 Compose 构建后冒烟检查容器内存在 `/app/config/scoring.yaml`。
+- 根 `Dockerfile` 已复制 `config/`，并新增 `.dockerignore` 排除 secret/cache/测试资料。
+- 开发与生产镜像已改为复制真实 `/opt/venv`，修复容器入口脚本存在但依赖不可导入的问题。
+- Compose 已增加单独 `migrate` 服务，消除 Web/Worker 并发 Alembic 竞态。
+- 启动执行配置 fail-fast；CI 验证 assets、`pip check`、镜像构建与 `/health/ready`。
 
 # Related Documents
 
@@ -58,4 +60,4 @@ paradigma:
 
 # Status
 
-**Open — P1**（2026-07-17 代码审计确认）。
+**Resolved — 0.8.0**（2026-07-17 11:16，开发/生产镜像及 Compose 冒烟通过）。

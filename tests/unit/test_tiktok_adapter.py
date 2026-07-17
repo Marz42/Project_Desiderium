@@ -9,7 +9,6 @@ from app.adapters.tiktok.client import TikTokClient
 from app.adapters.tiktok.errors import CookieExpiredError
 from app.domain.source_confidence import SOURCE_CONFIDENCE_LOW
 
-
 SAMPLE_HTML = """
 <html><body>
 <script id="SIGI_STATE" type="application/json">

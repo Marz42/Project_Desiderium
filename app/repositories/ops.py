@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, timedelta
-from typing import Any
+from datetime import UTC, date, datetime
+from typing import Any, cast
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import CursorResult, delete, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -154,8 +154,12 @@ class OpsRepository:
             for adapter, count in (await self._session.execute(failed_stmt)).all()
         }
 
-        running_stmt = select(func.count()).select_from(CrawlJob).where(
-            CrawlJob.status == CrawlJobStatus.RUNNING,
+        running_stmt = (
+            select(func.count())
+            .select_from(CrawlJob)
+            .where(
+                CrawlJob.status == CrawlJobStatus.RUNNING,
+            )
         )
         running = int(await self._session.scalar(running_stmt) or 0)
 
@@ -189,14 +193,20 @@ class OpsRepository:
 
     async def purge_metric_snapshots_before(self, cutoff: datetime) -> int:
         stmt = delete(MetricSnapshot).where(MetricSnapshot.captured_at < cutoff)
-        result = await self._session.execute(stmt)
+        result = cast(CursorResult[Any], await self._session.execute(stmt))
         return int(result.rowcount or 0)
 
     async def count_metric_snapshots(self) -> int:
-        return int(await self._session.scalar(select(func.count()).select_from(MetricSnapshot)) or 0)
+        return int(
+            await self._session.scalar(select(func.count()).select_from(MetricSnapshot)) or 0
+        )
 
     async def snapshots_older_than(self, cutoff: datetime) -> int:
-        stmt = select(func.count()).select_from(MetricSnapshot).where(
-            MetricSnapshot.captured_at < cutoff,
+        stmt = (
+            select(func.count())
+            .select_from(MetricSnapshot)
+            .where(
+                MetricSnapshot.captured_at < cutoff,
+            )
         )
         return int(await self._session.scalar(stmt) or 0)

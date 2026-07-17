@@ -5,13 +5,13 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 
 from scripts.shadow.scoring import (
+    VideoRecord,
     assign_age_bucket,
     breakout_ratio,
     cold_start_velocity,
     compute_channel_baselines,
     global_baseline_by_bucket,
     score_trend_cluster,
-    VideoRecord,
 )
 
 

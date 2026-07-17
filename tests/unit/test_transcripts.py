@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
-from app.models import ContentItem, Platform
+from app.models import ContentItem, Platform, Transcript, TranscriptSource, TranscriptStatus
 from app.services.transcripts import TranscriptService
 
 
@@ -51,3 +51,33 @@ def test_build_excerpt_truncates_long_transcript() -> None:
     excerpt = service.build_excerpt(item, long_text)
     assert excerpt.has_captions is True
     assert len(excerpt.text) <= service._config.transcripts.excerpt_chars + 1
+
+
+def test_success_is_terminal_and_unavailable_has_retry_cooldown() -> None:
+    service = TranscriptService.__new__(TranscriptService)
+    from app.services.llm_config import get_llm_config
+
+    service._config = get_llm_config()  # type: ignore[attr-defined]
+    item = ContentItem(
+        id=uuid.uuid4(),
+        platform=Platform.YOUTUBE,
+        external_id="abc123",
+        title_original="Test",
+        published_at=datetime.now(UTC),
+    )
+    item.transcripts = [
+        Transcript(
+            content_item_id=item.id,
+            source=TranscriptSource.PUBLIC_CAPTION,
+            status=TranscriptStatus.SUCCESS,
+            updated_at=datetime.now(UTC),
+        ),
+    ]
+    assert service._needs_fetch(item) is False
+
+    item.transcripts[0].status = TranscriptStatus.UNAVAILABLE
+    assert service._needs_fetch(item) is False
+    item.transcripts[0].updated_at = datetime.now(UTC) - timedelta(
+        days=service._config.transcripts.unavailable_retry_days + 1,
+    )
+    assert service._needs_fetch(item) is True

@@ -1,4 +1,4 @@
-name: Paradigma Quality Gates
+name: Desiderium Quality Gates
 
 on:
   push:
@@ -7,12 +7,146 @@ on:
     branches: [main]
 
 jobs:
-  check:
+  memory-bank:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
       - name: Run Paradigma checks
         run: python .paradigma/tools/pd-check-all.py
+
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e ".[dev]"
+      - run: ruff check .
+      - run: ruff format --check .
+      - name: Type check
+        run: mypy app
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e ".[dev]"
+      - run: pytest -q
+
+  migration-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: desiderium
+          POSTGRES_PASSWORD: desiderium
+          POSTGRES_DB: desiderium
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U desiderium -d desiderium"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql+asyncpg://desiderium:desiderium@localhost:5432/desiderium
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e .
+      - run: alembic upgrade head
+      - name: Upgrade from previous stable schema
+        run: |
+          alembic downgrade c8d9e0f1a2b3
+          alembic upgrade head
+      - run: alembic downgrade base
+      - run: alembic upgrade head
+      - name: Check model and migration drift (advisory)
+        continue-on-error: true
+        run: alembic check
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: desiderium
+          POSTGRES_PASSWORD: desiderium
+          POSTGRES_DB: desiderium
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U desiderium -d desiderium"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql+asyncpg://desiderium:desiderium@localhost:5432/desiderium
+      RUN_INTEGRATION_TESTS: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e ".[dev]"
+      - run: alembic upgrade head
+      - run: pytest tests/integration -q
+
+  docker-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t desiderium:dev .
+      - run: docker build -f Dockerfile.prod -t desiderium:prod .
+      - name: Verify runtime assets
+        run: >-
+          docker run --rm --entrypoint sh desiderium:dev -c
+          "test -f /app/config/scoring.yaml &&
+          test -f /app/config/prompts/creative_angles_v1.yaml &&
+          test -f /app/app/web/templates/base.html"
+      - run: docker compose up -d --build
+      - name: Wait for readiness
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://localhost:8000/health/ready; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker compose logs
+          exit 1
+      - if: always()
+        run: docker compose down -v
+
+  golden-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e .
+      - run: >-
+          python -m scripts.shadow.build_golden_dataset
+          --raw data/shadow/raw_videos.json
+          --json data/shadow/golden_dataset.json
+      - run: >-
+          python -m scripts.shadow.validate_scoring
+          --input data/shadow/golden_dataset.json
+          --output data/shadow/validation_report.md

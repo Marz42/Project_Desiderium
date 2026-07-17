@@ -61,11 +61,14 @@ class AdminTrendsService:
             for snap in reversed(snapshots)
         ]
 
-        channel_distribution = sorted(
-            [{"channel": k, "count": v} for k, v in channel_counts.items()],
-            key=lambda row: row["count"],
-            reverse=True,
-        )
+        channel_distribution = [
+            {"channel": channel, "count": count}
+            for channel, count in sorted(
+                channel_counts.items(),
+                key=lambda kv: kv[1],
+                reverse=True,
+            )
+        ]
 
         return {
             "trend": trend,

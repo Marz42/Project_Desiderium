@@ -64,6 +64,7 @@
           <th class="text-left py-2">频道</th>
           <th class="text-left py-2">播放量</th>
           <th class="text-left py-2">加入时间</th>
+          <th class="text-left py-2">操作</th>
         </tr>
       </thead>
       <tbody>
@@ -77,12 +78,55 @@
           <td class="py-2">{{ row.content.channel_name or '—' }}</td>
           <td class="py-2">{{ row.latest_views or '—' }}</td>
           <td class="py-2 text-slate-400">{{ row.member.added_at.strftime('%Y-%m-%d') if row.member.added_at else '—' }}</td>
+          <td class="py-2">
+            <form method="post" action="/trends/{{ trend.id }}/members/{{ row.content.id }}/move-out" class="inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <button class="text-xs text-amber-300 hover:text-amber-200">移出</button>
+            </form>
+          </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 </section>
+
+<section class="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-6">
+  <h3 class="font-medium mb-3">合并到已有趋势</h3>
+  <form method="post" action="/trends/{{ trend.id }}/merge" class="flex flex-wrap gap-2 items-end">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label class="text-sm">
+      <span class="text-slate-400">目标趋势</span>
+      <select name="target_trend_id" class="block mt-1 bg-slate-950 border border-slate-700 rounded px-2 py-1">
+        {% for other in other_trends %}
+        <option value="{{ other.id }}">{{ other.canonical_name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="text-sm grow">
+      <span class="text-slate-400">备注</span>
+      <input name="note" class="block mt-1 w-full bg-slate-950 border border-slate-700 rounded px-2 py-1" placeholder="人工合并原因">
+    </label>
+    <button class="px-3 py-1.5 rounded bg-blue-700 hover:bg-blue-600 text-sm">合并</button>
+  </form>
+  <p class="text-xs text-slate-500 mt-2">人工合并会写入审计记录，可后续回滚；不会物理删除当前趋势。</p>
+</section>
+
+{% if review_queue %}
+<section class="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-6">
+  <h3 class="font-medium mb-3">待审核聚类决策</h3>
+  <ul class="space-y-2 text-sm">
+    {% for item in review_queue %}
+    <li class="border-b border-slate-800 pb-2">
+      <span class="text-slate-400">{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+      · {{ item.source_cluster_key }}
+      · sim {{ '%.2f'|format(item.similarity or 0) }}
+      · {{ item.reason or 'needs_review' }}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
 
 <section class="bg-slate-900 border border-slate-800 rounded-xl p-4">
   <h3 class="font-medium mb-3">历史创作方向</h3>

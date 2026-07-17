@@ -3,7 +3,7 @@ type: paradigma-known-issue
 title: Transcript and Semantic Jobs Share Mutex Keys
 description: transcript_fetch and semantic_analysis fall back to the same advisory lock ID and share CrawlJobAdapter.TRANSCRIPT batch keys, so they can block each other.
 tags: [known-issue, scheduler, mutex, worker]
-timestamp: 2026-07-17T09:43:00+08:00
+timestamp: 2026-07-17T11:16:00+08:00
 paradigma:
   schema_version: "0.1"
   temperature: cold
@@ -47,9 +47,10 @@ paradigma:
 
 # Permanent Fix
 
-- 为 `transcript_fetch` 与 `semantic_analysis` 分配独立 `LOCK_IDS`。
-- 为语义任务使用独立的 adapter/job_type（或专用互斥路径），不再复用 TRANSCRIPT 批次键。
-- 增加互斥单元测试，防止默认锁回退再次出现。
+- 已为 `transcript_fetch` / `semantic_analysis` 分配独立 advisory lock `1301` / `1302`。
+- 已删除未知任务回退 `1999`，未注册 job 直接 `KeyError`。
+- 字幕 success 终态受 upsert 保护，unavailable 增加 7 天冷却；创作方向增加数据库唯一约束并使用 `ON CONFLICT DO NOTHING`。
+- 单元测试与 PostgreSQL 集成测试覆盖锁分离和重复写入。
 
 # Related Documents
 
@@ -60,4 +61,4 @@ paradigma:
 
 # Status
 
-**Open — P1**（2026-07-17 代码审计确认）。
+**Resolved — 0.8.0**（2026-07-17 11:16，锁分离与数据库幂等实测通过）。

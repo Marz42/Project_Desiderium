@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import csv
 import io
-import uuid
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -69,7 +69,7 @@ def parse_enabled(raw: str) -> bool:
     return raw.strip().lower() in {"true", "1", "yes", "y"}
 
 
-def validate_csv_headers(fieldnames: list[str] | None) -> list[str]:
+def validate_csv_headers(fieldnames: Sequence[str] | None) -> list[str]:
     if not fieldnames:
         return ["CSV file is empty or missing header row"]
     missing = [col for col in REQUIRED_CSV_COLUMNS if col not in fieldnames]
@@ -169,7 +169,9 @@ def watch_item_to_dict(item: Any) -> dict[str, Any]:
     }
 
 
-def watch_item_for_adapter(item: Any, known_external_ids: list[str] | None = None) -> dict[str, Any]:
+def watch_item_for_adapter(
+    item: Any, known_external_ids: list[str] | None = None
+) -> dict[str, Any]:
     data = watch_item_to_dict(item)
     data["known_external_ids"] = known_external_ids or []
     return data

@@ -3,7 +3,7 @@ type: paradigma-manual
 title: Desiderium Operations Manual
 description: Production deployment and day-to-day operations entry point; canonical detail lives in root OPS.md.
 tags: [manual, ops, deployment, monitoring]
-timestamp: 2026-07-17T09:09:00+08:00
+timestamp: 2026-07-17T11:16:00+08:00
 paradigma:
   schema_version: "0.1"
   temperature: cold
@@ -39,7 +39,7 @@ paradigma:
 
 # Steps
 
-1. 首次部署：`docker compose -f docker-compose.prod.yml up -d --build`（web/worker 启动时自动 `alembic upgrade head`）。
+1. 首次部署：`docker compose -f docker-compose.prod.yml up -d --build`（一次性 `migrate` 服务先执行 `alembic upgrade head`，成功后再启动 web/worker）。
 2. 可选每日备份 sidecar：`docker compose -f docker-compose.prod.yml --profile backup up -d backup`。
 3. 升级：`git pull` → `build` → `up -d`。
 4. 手动备份：`./scripts/backup.sh`；索引维护：`python scripts/optimize_db_indexes.py`。

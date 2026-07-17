@@ -94,7 +94,12 @@ class TikTokAdapter:
                     max_items=max_items,
                     raw_responses=raw_responses,
                 )
-            if item_type in (WatchItemType.KEYWORD.value, WatchItemType.ANIME.value, "keyword", "anime"):
+            if item_type in (
+                WatchItemType.KEYWORD.value,
+                WatchItemType.ANIME.value,
+                "keyword",
+                "anime",
+            ):
                 return await self._discover_keyword(
                     watch_item,
                     cursor=page_cursor,
@@ -250,7 +255,12 @@ class TikTokAdapter:
         url_or_id: str,
         name: str,
     ) -> str:
-        if item_type in (WatchItemType.KEYWORD.value, WatchItemType.ANIME.value, "keyword", "anime"):
+        if item_type in (
+            WatchItemType.KEYWORD.value,
+            WatchItemType.ANIME.value,
+            "keyword",
+            "anime",
+        ):
             return normalize_keyword_external_id(url_or_id or name)
         if item_type in (WatchItemType.RANKING.value, "ranking"):
             return normalize_keyword_external_id(url_or_id or name)

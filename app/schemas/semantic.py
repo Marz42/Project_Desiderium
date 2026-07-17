@@ -49,6 +49,21 @@ class FormatClassificationResult(BaseModel):
     rationale_zh: str
 
 
+ClusterAction = Literal[
+    "merge_same_angle",
+    "merge_theme_keep_angles_separate",
+    "create_new_theme",
+    "needs_review",
+]
+
+
+class ClusterAdjudicationResult(BaseModel):
+    action: ClusterAction
+    confidence: float = Field(ge=0.0, le=1.0)
+    reason: str
+    facet_label: str | None = None
+
+
 class LlmUsageStats(BaseModel):
     prompt_tokens: int = 0
     completion_tokens: int = 0

@@ -1,0 +1,49 @@
+{
+  "fetched_at": "2026-07-17T08:00:00+00:00",
+  "videos": [
+    {"video_id":"sl-1","channel_id":"ch-01","channel_name":"Anime One","title":"Solo Leveling Sung Jinwoo Shadow Monarch","published_at":"2026-07-17T02:00:00+00:00","views":90000,"duration_seconds":60,"language":"en","tier":"priority"},
+    {"video_id":"sl-2","channel_id":"ch-02","channel_name":"Anime Two","title":"Solo Leveling Season 2 Jinwoo Explained","published_at":"2026-07-17T01:00:00+00:00","views":75000,"duration_seconds":70,"language":"en-US","tier":"priority"},
+    {"video_id":"sl-3","channel_id":"ch-03","channel_name":"Anime Three","title":"Shadow Monarch Solo Leveling Recap","published_at":"2026-07-16T23:00:00+00:00","views":68000,"duration_seconds":55,"language":"en","tier":"general"},
+
+    {"video_id":"jjk-1","channel_id":"ch-04","channel_name":"Recap Four","title":"Jujutsu Kaisen Gojo and Sukuna Explained","published_at":"2026-07-17T03:00:00+00:00","views":88000,"duration_seconds":62,"language":"en","tier":"priority"},
+    {"video_id":"jjk-2","channel_id":"ch-05","channel_name":"Recap Five","title":"JJK Sukuna Current Arc Recap","published_at":"2026-07-17T00:00:00+00:00","views":72000,"duration_seconds":59,"language":"en-GB","tier":"general"},
+    {"video_id":"jjk-3","channel_id":"ch-06","channel_name":"Recap Six","title":"Gojo Returns Jujutsu Kaisen Story","published_at":"2026-07-16T22:00:00+00:00","views":65000,"duration_seconds":64,"language":"en","tier":"general"},
+
+    {"video_id":"ds-1","channel_id":"ch-07","channel_name":"Cuts Seven","title":"Demon Slayer Infinity Castle Hashira Fight","published_at":"2026-07-17T02:30:00+00:00","views":91000,"duration_seconds":58,"language":"en","tier":"priority"},
+    {"video_id":"ds-2","channel_id":"ch-08","channel_name":"Cuts Eight","title":"Tanjiro Infinity Castle Demon Slayer Recap","published_at":"2026-07-17T00:30:00+00:00","views":76000,"duration_seconds":63,"language":"en","tier":"priority"},
+    {"video_id":"ds-3","channel_id":"ch-09","channel_name":"Cuts Nine","title":"Hashira Final Battle Kimetsu Explained","published_at":"2026-07-16T21:00:00+00:00","views":63000,"duration_seconds":61,"language":"en-US","tier":"general"},
+
+    {"video_id":"cm-1","channel_id":"ch-10","channel_name":"Focus Ten","title":"Chainsaw Man Reze Arc Explained","published_at":"2026-07-17T02:00:00+00:00","views":87000,"duration_seconds":60,"language":"en","tier":"priority"},
+    {"video_id":"cm-2","channel_id":"ch-11","channel_name":"Focus Eleven","title":"Denji and Reze Chainsaw Man Story","published_at":"2026-07-16T23:30:00+00:00","views":73000,"duration_seconds":57,"language":"en","tier":"general"},
+    {"video_id":"cm-3","channel_id":"ch-12","channel_name":"Focus Twelve","title":"Chainsaw Man Season 2 Reze Recap","published_at":"2026-07-16T20:00:00+00:00","views":61000,"duration_seconds":66,"language":"en-GB","tier":"general"},
+
+    {"video_id":"fr-1","channel_id":"ch-13","channel_name":"Story Thirteen","title":"Frieren and Himmel Emotional Arc","published_at":"2026-07-17T01:00:00+00:00","views":48000,"duration_seconds":68,"language":"en","tier":"general"},
+    {"video_id":"fr-2","channel_id":"ch-14","channel_name":"Story Fourteen","title":"Frieren Fern and Stark Journey Recap","published_at":"2026-07-16T22:00:00+00:00","views":44000,"duration_seconds":72,"language":"en","tier":"general"},
+    {"video_id":"fr-3","channel_id":"ch-15","channel_name":"Story Fifteen","title":"Himmel Changed Frieren Forever","published_at":"2026-07-16T18:00:00+00:00","views":39000,"duration_seconds":65,"language":"en-US","tier":"general"},
+
+    {"video_id":"gen-1","channel_id":"ch-16","channel_name":"Lists Sixteen","title":"Top 10 Anime You Must Watch","published_at":"2026-07-17T02:00:00+00:00","views":120000,"duration_seconds":80,"language":"en","tier":"general"},
+    {"video_id":"gen-2","channel_id":"ch-17","channel_name":"Lists Seventeen","title":"Best Anime Recap 2026","published_at":"2026-07-17T00:00:00+00:00","views":110000,"duration_seconds":75,"language":"en","tier":"general"},
+    {"video_id":"gen-3","channel_id":"ch-18","channel_name":"Lists Eighteen","title":"Every Anime Ranked This Year","published_at":"2026-07-16T22:00:00+00:00","views":100000,"duration_seconds":90,"language":"en","tier":"general"},
+
+    {"video_id":"hi-1","channel_id":"ch-19","channel_name":"Hindi Nineteen","title":"Solo Leveling in Hindi Full Recap","published_at":"2026-07-17T02:00:00+00:00","views":150000,"duration_seconds":60,"language":"hi","tier":"general"},
+    {"video_id":"hi-2","channel_id":"ch-20","channel_name":"Hindi Twenty","title":"Anime Explained Hindi","published_at":"2026-07-17T00:00:00+00:00","views":130000,"duration_seconds":60,"language":"hi-IN","tier":"general"},
+    {"video_id":"hi-3","channel_id":"ch-21","channel_name":"Hindi Twenty One","title":"Jujutsu Kaisen हिंदी Recap","published_at":"2026-07-16T22:00:00+00:00","views":125000,"duration_seconds":60,"language":"hi","tier":"general"},
+
+    {"video_id":"mw-1","channel_id":"ch-22","channel_name":"Webtoon Twenty Two","title":"Overpowered Manhwa Hero Recap","published_at":"2026-07-17T02:00:00+00:00","views":145000,"duration_seconds":60,"language":"en","tier":"general"},
+    {"video_id":"mw-2","channel_id":"ch-23","channel_name":"Webtoon Twenty Three","title":"Best Webtoon Story Explained","published_at":"2026-07-17T00:00:00+00:00","views":135000,"duration_seconds":60,"language":"en","tier":"general"},
+    {"video_id":"mw-3","channel_id":"ch-24","channel_name":"Webtoon Twenty Four","title":"Manhua Cultivation Full Recap","published_at":"2026-07-16T22:00:00+00:00","views":128000,"duration_seconds":60,"language":"en","tier":"general"},
+
+    {"video_id":"base-01","channel_id":"ch-01","channel_name":"Anime One","title":"Older Episode Discussion","published_at":"2026-07-17T03:00:00+00:00","views":0,"duration_seconds":60,"language":"en","tier":"priority"},
+    {"video_id":"base-02","channel_id":"ch-02","channel_name":"Anime Two","title":"Previous Weekly Recap","published_at":"2026-07-17T03:00:00+00:00","views":0,"duration_seconds":60,"language":"en","tier":"priority"},
+    {"video_id":"base-03","channel_id":"ch-03","channel_name":"Anime Three","title":"Older Character Story","published_at":"2026-07-17T03:00:00+00:00","views":0,"duration_seconds":60,"language":"en","tier":"general"},
+    {"video_id":"base-04","channel_id":"ch-04","channel_name":"Recap Four","title":"Previous Episode Notes","published_at":"2026-07-17T03:00:00+00:00","views":0,"duration_seconds":60,"language":"en","tier":"priority"},
+    {"video_id":"base-05","channel_id":"ch-05","channel_name":"Recap Five","title":"Older Fight Explained","published_at":"2026-07-17T03:00:00+00:00","views":0,"duration_seconds":60,"language":"en","tier":"general"},
+    {"video_id":"base-06","channel_id":"ch-06","channel_name":"Recap Six","title":"Previous Arc Summary","published_at":"2026-07-17T03:00:00+00:00","views":0,"duration_seconds":60,"language":"en","tier":"general"},
+    {"video_id":"base-07","channel_id":"ch-07","channel_name":"Cuts Seven","title":"Older Anime Scene","published_at":"2026-07-17T00:00:00+00:00","views":0,"duration_seconds":60,"language":"en","tier":"priority"},
+    {"video_id":"base-08","channel_id":"ch-08","channel_name":"Cuts Eight","title":"Previous Anime Recap","published_at":"2026-07-17T00:00:00+00:00","views":0,"duration_seconds":60,"language":"en","tier":"priority"},
+    {"video_id":"base-09","channel_id":"ch-09","channel_name":"Cuts Nine","title":"Older Story Breakdown","published_at":"2026-07-17T00:00:00+00:00","views":0,"duration_seconds":60,"language":"en","tier":"general"},
+    {"video_id":"base-10","channel_id":"ch-10","channel_name":"Focus Ten","title":"Previous Weekly Story","published_at":"2026-07-17T00:00:00+00:00","views":0,"duration_seconds":60,"language":"en","tier":"priority"},
+    {"video_id":"base-11","channel_id":"ch-11","channel_name":"Focus Eleven","title":"Older Episode Analysis","published_at":"2026-07-17T00:00:00+00:00","views":0,"duration_seconds":60,"language":"en","tier":"general"},
+    {"video_id":"base-12","channel_id":"ch-12","channel_name":"Focus Twelve","title":"Previous Character Recap","published_at":"2026-07-17T00:00:00+00:00","views":0,"duration_seconds":60,"language":"en","tier":"general"}
+  ]
+}

@@ -10,3 +10,7 @@
 - [2026-07-17 Stage 8 — Deployment, Stability & Ops](2026-07-17-stage-8-deployment-ops.md)
 - [2026-07-17 Memory-Bank Overhaul](2026-07-17-memory-bank-overhaul.md)
 - [2026-07-17 Full Project Test and Status Audit](2026-07-17-full-project-test.md)
+- [2026-07-17 Beta Stabilization — G1/G2 Hardening](2026-07-17-beta-stabilization.md)
+- [2026-07-17 G4 — Publication Performance Feedback & Brief Read-only](2026-07-17-g4-publication-metrics.md)
+- [2026-07-17 Iteration 5 Beta Observation — 0.10.0](2026-07-17-iteration-5-beta-observation.md)
+- [2026-07-17 G3/G4 + MyPy Hardening — 0.9.0](2026-07-17-g3-g4-mypy-hardening.md)

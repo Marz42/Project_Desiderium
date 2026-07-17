@@ -14,7 +14,11 @@ from app.domain.trend_metrics import (
     global_baseline_by_bucket,
 )
 from app.models import Platform
-from app.repositories.baselines import BaselinesRepository, build_baseline_rows, velocities_from_content_items
+from app.repositories.baselines import (
+    BaselinesRepository,
+    build_baseline_rows,
+    velocities_from_content_items,
+)
 from app.repositories.metrics import MetricsRepository
 from app.services.scoring_config import ScoringConfig, get_scoring_config
 
@@ -30,7 +34,9 @@ class BaselineService:
         self._baselines = BaselinesRepository(session)
         self._config = config or get_scoring_config()
 
-    def _content_to_video_input(self, item, *, views: int, tier: str = "general") -> VideoMetricsInput:
+    def _content_to_video_input(
+        self, item, *, views: int, tier: str = "general"
+    ) -> VideoMetricsInput:
         return VideoMetricsInput(
             content_item_id=str(item.id),
             channel_external_id=item.channel_external_id or "",
@@ -67,7 +73,10 @@ class BaselineService:
             )
             upserted += 1
 
-        return {"channels_processed": len({r["channel_external_id"] for r in rows}), "rows_upserted": upserted}
+        return {
+            "channels_processed": len({r["channel_external_id"] for r in rows}),
+            "rows_upserted": upserted,
+        }
 
     async def compute_breakout_for_content(
         self,
@@ -77,7 +86,6 @@ class BaselineService:
         tier: str = "general",
         now: datetime | None = None,
     ) -> dict[str, Any]:
-        from app.domain.trend_metrics import breakout_ratio
 
         now = now or datetime.now(UTC)
         items = await self._metrics.list_content_for_baseline(

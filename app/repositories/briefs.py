@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date
+from datetime import UTC, date, datetime
+from typing import Any
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -21,7 +22,9 @@ class BriefRepository:
             select(Brief)
             .where(Brief.brief_date == brief_date)
             .options(
-                selectinload(Brief.items).selectinload(BriefItem.creative_angle).selectinload(CreativeAngle.trend),
+                selectinload(Brief.items)
+                .selectinload(BriefItem.creative_angle)
+                .selectinload(CreativeAngle.trend),
             )
         )
         return await self._session.scalar(stmt)
@@ -34,6 +37,11 @@ class BriefRepository:
             brief_date=brief_date,
             title=f"今日番剧解说趋势简报 — {brief_date.isoformat()}",
             status=BriefStatus.DRAFT,
+            # Pre-populate the collection while transient so it's already
+            # "loaded" once persisted; otherwise accessing brief.items after
+            # flush would trigger a synchronous lazy-load that raises
+            # MissingGreenlet under AsyncSession.
+            items=[],
         )
         self._session.add(brief)
         await self._session.flush()
@@ -82,11 +90,42 @@ class BriefRepository:
         brief = await self._session.get(Brief, brief_id)
         if brief is None:
             return
-        from datetime import UTC, datetime
-
-        brief.status = BriefStatus.EXPORTED
+        # Do not demote an already-finalized brief back to a plain "exported"
+        # state; the finalized snapshot takes precedence for downstream reads.
+        if brief.status == BriefStatus.DRAFT:
+            brief.status = BriefStatus.EXPORTED
         brief.exported_at = datetime.now(UTC)
         await self._session.flush()
+
+    async def finalize(
+        self,
+        brief_id: uuid.UUID,
+        snapshot: list[dict[str, Any]],
+        content_hash: str,
+        *,
+        finalized_by: str,
+    ) -> Brief | None:
+        finalized_at = datetime.now(UTC)
+        stmt = (
+            update(Brief)
+            .where(
+                Brief.id == brief_id,
+                Brief.finalized_snapshot.is_(None),
+            )
+            .values(
+                finalized_snapshot=snapshot,
+                finalized_content_hash=content_hash,
+                finalized_at=finalized_at,
+                finalized_by=finalized_by,
+                status=BriefStatus.FINALIZED,
+            )
+            .returning(Brief.id)
+        )
+        finalized_id = (await self._session.execute(stmt)).scalar_one_or_none()
+        await self._session.flush()
+        if finalized_id is None:
+            return await self._session.get(Brief, brief_id, populate_existing=True)
+        return await self._session.get(Brief, finalized_id, populate_existing=True)
 
     async def load_export_data(self, brief_date: date) -> list[dict]:
         brief = await self.get_by_date(brief_date)

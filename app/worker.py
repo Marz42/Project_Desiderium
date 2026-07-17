@@ -12,6 +12,7 @@ from app.config import get_settings
 from app.db import check_database_connection, dispose_engine, get_session_factory
 from app.jobs.scheduler import register_crawl_jobs
 from app.logging_config import configure_logging
+from app.services.config_validation import validate_runtime_config
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,7 @@ async def heartbeat() -> None:
 async def run_worker() -> None:
     settings = get_settings()
     configure_logging(settings.log_level)
+    validate_runtime_config(settings)
     logger.info(
         "Starting worker",
         extra={"service": "worker", "component": "main", "environment": settings.environment},

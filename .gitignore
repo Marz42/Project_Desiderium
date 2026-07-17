@@ -29,4 +29,5 @@ coverage.xml
 # Shadow validation cache (golden dataset is committed)
 # ============================================================
 data/shadow/cache/
-data/shadow/
+data/shadow/golden_dataset.csv
+data/shadow/validation_report.md

@@ -18,6 +18,22 @@ services:
     networks:
       - internal
 
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-desiderium}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-desiderium}
+      ENVIRONMENT: production
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: alembic upgrade head
+    networks:
+      - internal
+
   web:
     build:
       context: .
@@ -29,11 +45,9 @@ services:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-desiderium}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-desiderium}
       ENVIRONMENT: production
     depends_on:
-      postgres:
-        condition: service_healthy
-    command: >
-      sh -c "alembic upgrade head &&
-             uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2 --proxy-headers --forwarded-allow-ips '*'"
+      migrate:
+        condition: service_completed_successfully
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2 --proxy-headers --forwarded-allow-ips "*"
     expose:
       - "8000"
     networks:
@@ -50,11 +64,9 @@ services:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-desiderium}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-desiderium}
       ENVIRONMENT: production
     depends_on:
-      postgres:
-        condition: service_healthy
-    command: >
-      sh -c "alembic upgrade head &&
-             python -m app.worker"
+      migrate:
+        condition: service_completed_successfully
+    command: python -m app.worker
     networks:
       - internal
 

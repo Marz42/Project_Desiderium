@@ -7,10 +7,9 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import AngleStatus
+from app.models import AngleStatus, PublicationStatus
 from app.repositories.creative_angles import CreativeAngleRepository
 from app.repositories.daily_candidates import DailyCandidateRepository
-
 
 STATUS_FILTERS = {
     "selected": "selected",
@@ -47,12 +46,34 @@ class AdminHistoryService:
 
             pub_records = angle.publication_records or []
             latest_pub = pub_records[-1] if pub_records else None
+            published_pub = next(
+                (p for p in reversed(pub_records) if p.status == PublicationStatus.PUBLISHED),
+                None,
+            )
+            latest_ratio = None
+            if published_pub is not None and published_pub.metric_snapshots:
+                ranked = sorted(
+                    published_pub.metric_snapshots,
+                    key=lambda s: s.captured_at,
+                )
+                for snap in reversed(ranked):
+                    if snap.performance_ratio is not None:
+                        latest_ratio = {
+                            "window_key": snap.window_key.value,
+                            "performance_ratio": snap.performance_ratio,
+                            "baseline_confidence": (
+                                snap.baseline_confidence.value if snap.baseline_confidence else None
+                            ),
+                        }
+                        break
 
             entry = {
                 "daily": row,
                 "angle": angle,
                 "trend": trend,
                 "publication": latest_pub,
+                "published_url": published_pub.published_url if published_pub else None,
+                "latest_performance": latest_ratio,
             }
             entries.append(entry)
 

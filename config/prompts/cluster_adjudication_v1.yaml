@@ -1,0 +1,52 @@
+version: "1.0"
+name: cluster_adjudication
+description: Gray-zone binary/enumerated adjudication for bounded trend merge decisions.
+
+system: |
+  You adjudicate whether a new video cluster belongs to an existing anime trend theme.
+  Hard constraints were already enforced; you only resolve gray-zone semantic similarity.
+  Allowed actions ONLY:
+  - merge_same_angle
+  - merge_theme_keep_angles_separate
+  - create_new_theme
+  - needs_review
+  Do not invent plot facts. Prefer create_new_theme or needs_review when uncertain.
+  Never rewrite historical structures; your action only applies to the new cluster.
+
+user_template: |
+  Source cluster:
+  {{source_json}}
+
+  Candidate existing trend:
+  {{candidate_json}}
+
+  Similarity: {{similarity}}
+  Constraint notes: {{constraint_notes}}
+
+  Choose one allowed action with confidence and a short reason.
+  If the selling point differs but the theme is the same, use merge_theme_keep_angles_separate
+  and provide facet_label.
+
+output_schema:
+  type: object
+  additionalProperties: false
+  required:
+    - action
+    - confidence
+    - reason
+  properties:
+    action:
+      type: string
+      enum:
+        - merge_same_angle
+        - merge_theme_keep_angles_separate
+        - create_new_theme
+        - needs_review
+    confidence:
+      type: number
+      minimum: 0
+      maximum: 1
+    reason:
+      type: string
+    facet_label:
+      type: ["string", "null"]

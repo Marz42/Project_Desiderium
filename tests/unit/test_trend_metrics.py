@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from app.domain.trend_metrics import (
+    VideoMetricsInput,
     assign_age_bucket,
     breakout_ratio,
     cold_start_velocity,
@@ -13,7 +15,7 @@ from app.domain.trend_metrics import (
     is_snapshot_due,
     score_trend_cluster,
     snapshot_interval_hours,
-    VideoMetricsInput,
+    video_age_hours,
 )
 from app.services.scoring_config import load_scoring_config
 
@@ -39,6 +41,21 @@ def _video(
         duration_seconds=600,
         tier=tier,  # type: ignore[arg-type]
     )
+
+
+def test_video_age_hours_is_stable_across_dst_boundary() -> None:
+    eastern = ZoneInfo("America/New_York")
+    published = datetime(2026, 3, 8, 1, 30, tzinfo=eastern)
+    captured = datetime(2026, 3, 8, 3, 30, tzinfo=eastern)
+
+    assert video_age_hours(published, captured) == 1.0
+
+
+def test_video_age_hours_treats_naive_timestamp_as_utc() -> None:
+    published = datetime(2026, 7, 17, 10)
+    captured = datetime(2026, 7, 17, 12, tzinfo=UTC)
+
+    assert video_age_hours(published, captured) == 2.0
 
 
 def test_age_buckets() -> None:
@@ -119,3 +136,38 @@ def test_snapshot_scheduling_by_age() -> None:
 def test_is_snapshot_due_without_prior_snapshot() -> None:
     published = datetime.now(UTC) - timedelta(hours=6)
     assert is_snapshot_due(None, published) is True
+
+
+def test_standard_threshold_uses_distinct_channels_not_video_count() -> None:
+    now = datetime.now(UTC)
+    # 3 videos from only 2 channels in 72h must not meet the formal gate.
+    members = [
+        {
+            "channel_id": "ch1",
+            "tier": "priority",
+            "capped_breakout": 3.0,
+            "breakout_ratio": 3.0,
+            "views": 10000,
+            "published_at": (now - timedelta(hours=10)).isoformat(),
+        },
+        {
+            "channel_id": "ch1",
+            "tier": "priority",
+            "capped_breakout": 3.0,
+            "breakout_ratio": 3.0,
+            "views": 12000,
+            "published_at": (now - timedelta(hours=12)).isoformat(),
+        },
+        {
+            "channel_id": "ch2",
+            "tier": "priority",
+            "capped_breakout": 3.0,
+            "breakout_ratio": 3.0,
+            "views": 15000,
+            "published_at": (now - timedelta(hours=14)).isoformat(),
+        },
+    ]
+    score = score_trend_cluster(members, now=now)
+    assert score["channels_72h"] == 2
+    assert score["videos_72h"] == 3
+    assert score["meets_standard_threshold"] is False

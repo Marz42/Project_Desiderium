@@ -1,4 +1,4 @@
-"""Build golden dataset with scoring fields and manual trend labels."""
+"""Build golden dataset with scoring fields and production clustering path."""
 
 from __future__ import annotations
 
@@ -8,13 +8,16 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
+from app.domain.trend_metrics import parse_iso_datetime
+from app.services.clustering import assignments_to_member_rows, cluster_videos
+from app.services.relevance import classify_relevance
+from app.services.scoring import TrendScoringService
+from app.services.scoring_config import get_scoring_config
 from scripts.shadow.scoring import (
     VideoRecord,
     breakout_ratio,
     compute_channel_baselines,
     global_baseline_by_bucket,
-    parse_iso_datetime,
-    score_trend_cluster,
 )
 
 DATA_DIR = Path("data/shadow")
@@ -62,7 +65,8 @@ def records_from_raw(raw: dict) -> list[VideoRecord]:
                 likes=row.get("likes"),
                 comments=row.get("comments"),
                 duration_seconds=int(row.get("duration_seconds", 0)),
-                tier=row.get("tier", "general"),  # type: ignore[arg-type]
+                language=row.get("language"),
+                tier=row.get("tier", "general"),
                 url=row.get("url", ""),
             )
         )
@@ -77,29 +81,43 @@ def build_golden_dataset(
 ) -> dict:
     raw = json.loads(raw_path.read_text(encoding="utf-8"))
     trends = load_trend_labels()
-    now = datetime.now(UTC)
+    now = parse_iso_datetime(raw["fetched_at"]) if raw.get("fetched_at") else datetime.now(UTC)
     records = records_from_raw(raw)
+    scoring = TrendScoringService(get_scoring_config())
 
     baselines = compute_channel_baselines(records, now=now)
     global_fallback = global_baseline_by_bucket(records, now=now)
 
     rows: list[dict] = []
+    config = get_scoring_config()
     for record in records:
+        relevance = classify_relevance(
+            title=record.title,
+            language=record.language,
+            config=config.relevance,
+        )
+        if relevance.multiplier <= 0:
+            continue
         scores = breakout_ratio(record, baselines, global_fallback, now=now)
         trend = assign_trend(record.title, trends)
         rows.append(
             {
+                "content_item_id": record.video_id,
                 "video_id": record.video_id,
                 "channel_id": record.channel_id,
                 "channel_name": record.channel_name,
                 "title": record.title,
+                "title_original": record.title,
                 "url": record.url,
                 "published_at": record.published_at.isoformat(),
                 "views": record.views,
                 "likes": record.likes or "",
                 "comments": record.comments or "",
                 "duration_seconds": record.duration_seconds,
+                "language": record.language or "",
                 "tier": record.tier,
+                "relevance_category": relevance.category,
+                "relevance_multiplier": relevance.multiplier,
                 "age_hours": scores["age_hours"],
                 "age_bucket": scores["age_bucket"],
                 "velocity": scores["velocity"],
@@ -109,6 +127,7 @@ def build_golden_dataset(
                 "breakout_label": scores["breakout_label"],
                 "baseline_confidence": scores["baseline_confidence"],
                 "baseline_source": scores["baseline_source"],
+                "label_trend_id": trend["trend_id"],
                 "trend_id": trend["trend_id"],
                 "trend_name": trend["name"],
                 "anime_title": trend.get("anime_title", ""),
@@ -117,27 +136,53 @@ def build_golden_dataset(
             }
         )
 
+    # Production clustering path (entity dictionary), scored with TrendScoringService.
+    production_clusters = cluster_videos(rows)
+    video_lookup = {row["content_item_id"]: row for row in rows}
+    production_summaries = []
+    for entity_id, assignments in production_clusters.items():
+        members = assignments_to_member_rows(assignments, video_lookup)
+        summary = scoring.score_cluster(members)
+        label_values = [video_lookup[a.content_item_id].get("manager_value") for a in assignments]
+        high_share = label_values.count("high") / max(len(label_values), 1)
+        manager_value = (
+            "high" if high_share >= 0.5 else ("low" if "low" in label_values else "normal")
+        )
+        production_summaries.append(
+            {
+                "trend_id": entity_id,
+                "trend_name": assignments[0].canonical_name,
+                "anime_title": assignments[0].anime_title,
+                "manager_value": manager_value,
+                "video_count": len(members),
+                "source": "production_cluster_videos",
+                **summary,
+            }
+        )
+    production_summaries.sort(key=lambda item: item["trend_score"], reverse=True)
+
+    # Keep labeled summaries for manager-value precision checks.
     trend_clusters: dict[str, list[dict]] = {}
     for row in rows:
-        trend_clusters.setdefault(row["trend_id"], []).append(row)
+        trend_clusters.setdefault(row["label_trend_id"], []).append(row)
 
-    trend_summaries = []
+    labeled_summaries = []
     for trend_id, members in trend_clusters.items():
         if trend_id == "trend_unlabeled":
             continue
-        summary = score_trend_cluster(members, now=now)
-        trend_summaries.append(
+        summary = scoring.score_cluster(members)
+        labeled_summaries.append(
             {
                 "trend_id": trend_id,
                 "trend_name": members[0]["trend_name"],
                 "anime_title": members[0]["anime_title"],
                 "manager_value": members[0]["manager_value"],
                 "video_count": len(members),
+                "source": "manager_labels",
                 **summary,
             }
         )
-
-    trend_summaries.sort(key=lambda item: item["trend_score"], reverse=True)
+    labeled_summaries.sort(key=lambda item: item["trend_score"], reverse=True)
 
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     fieldnames = list(rows[0].keys()) if rows else []
@@ -151,9 +196,11 @@ def build_golden_dataset(
         "source_fetched_at": raw.get("fetched_at"),
         "video_count": len(rows),
         "channel_count": len({r["channel_id"] for r in rows}),
-        "trend_count": len(trend_summaries),
+        "trend_count": len(labeled_summaries),
+        "production_cluster_count": len(production_summaries),
         "videos": rows,
-        "trend_summaries": trend_summaries,
+        "trend_summaries": labeled_summaries,
+        "production_trend_summaries": production_summaries,
         "channel_baselines": [
             {
                 "channel_id": key[0],
@@ -183,7 +230,8 @@ def main() -> None:
     print(
         f"Golden dataset: {payload['video_count']} videos, "
         f"{payload['channel_count']} channels, "
-        f"{payload['trend_count']} labeled trends"
+        f"{payload['trend_count']} labeled trends, "
+        f"{payload['production_cluster_count']} production clusters"
     )
 
 

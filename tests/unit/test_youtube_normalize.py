@@ -38,3 +38,19 @@ def test_normalize_youtube_video():
     assert normalized["duration_seconds"] == 330
     assert normalized["metrics"]["views"] == 1000
     assert normalized["url"] == "https://www.youtube.com/watch?v=abc123"
+
+
+def test_normalize_youtube_video_preserves_hidden_likes_as_none():
+    normalized = normalize_youtube_video(
+        {
+            "id": "abc123",
+            "snippet": {
+                "title": "Hidden likes",
+                "publishedAt": "2026-07-17T00:00:00Z",
+            },
+            "statistics": {"viewCount": "1000", "commentCount": "10"},
+            "contentDetails": {"duration": "PT1M"},
+        },
+    )
+
+    assert normalized["metrics"]["likes"] is None

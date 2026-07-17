@@ -20,7 +20,9 @@ async def test_health_ready_when_database_up(client):
 
 @pytest.mark.asyncio
 async def test_health_ready_when_database_down(client):
-    with patch("app.web.routes.health.check_database_connection", new=AsyncMock(return_value=False)):
+    with patch(
+        "app.web.routes.health.check_database_connection", new=AsyncMock(return_value=False)
+    ):
         response = await client.get("/health/ready")
     assert response.status_code == 503
     assert response.json() == {"status": "unavailable", "database": "down"}

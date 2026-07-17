@@ -182,11 +182,15 @@ class CrawlJobRepository:
         return job
 
     async def has_running_batch(self, adapter: CrawlJobAdapter, job_type: CrawlJobType) -> bool:
-        stmt = select(func.count()).select_from(CrawlJob).where(
-            CrawlJob.adapter == adapter,
-            CrawlJob.job_type == job_type,
-            CrawlJob.status == CrawlJobStatus.RUNNING,
-            CrawlJob.watch_item_id.is_(None),
+        stmt = (
+            select(func.count())
+            .select_from(CrawlJob)
+            .where(
+                CrawlJob.adapter == adapter,
+                CrawlJob.job_type == job_type,
+                CrawlJob.status == CrawlJobStatus.RUNNING,
+                CrawlJob.watch_item_id.is_(None),
+            )
         )
         count = await self._session.scalar(stmt)
         return int(count or 0) > 0
@@ -220,11 +224,6 @@ class CrawlJobRepository:
         ]
         if adapter is not None:
             conditions.append(CrawlJob.adapter == adapter)
-        stmt = (
-            select(CrawlJob)
-            .where(*conditions)
-            .order_by(CrawlJob.finished_at.asc())
-            .limit(limit)
-        )
+        stmt = select(CrawlJob).where(*conditions).order_by(CrawlJob.finished_at.asc()).limit(limit)
         result = await self._session.scalars(stmt)
         return list(result.all())

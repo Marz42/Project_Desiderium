@@ -1,12 +1,17 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime
+from datetime import UTC, date, datetime
+from typing import Any
 
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.domain.membership_policy import (
+    may_reactivate_membership,
+    membership_method_priority,
+)
 from app.models import (
     LifecycleStatus,
     MembershipMethod,
@@ -24,7 +29,9 @@ class TrendsRepository:
     async def get_by_id(self, trend_id: uuid.UUID) -> TrendTheme | None:
         return await self._session.get(TrendTheme, trend_id)
 
-    async def list_score_snapshots(self, trend_id: uuid.UUID, *, limit: int = 30) -> list[TrendScoreSnapshot]:
+    async def list_score_snapshots(
+        self, trend_id: uuid.UUID, *, limit: int = 30
+    ) -> list[TrendScoreSnapshot]:
         stmt = (
             select(TrendScoreSnapshot)
             .where(TrendScoreSnapshot.trend_id == trend_id)
@@ -33,7 +40,12 @@ class TrendsRepository:
         )
         return list((await self._session.scalars(stmt)).all())
 
-    async def list_members_with_content(self, trend_id: uuid.UUID) -> list[TrendMember]:
+    async def list_members_with_content(
+        self,
+        trend_id: uuid.UUID,
+        *,
+        active_only: bool = True,
+    ) -> list[TrendMember]:
         from sqlalchemy.orm import selectinload
 
         stmt = (
@@ -42,20 +54,27 @@ class TrendsRepository:
             .options(selectinload(TrendMember.content_item))
             .order_by(TrendMember.added_at.desc())
         )
+        if active_only:
+            stmt = stmt.where(TrendMember.active.is_(True))
         return list((await self._session.scalars(stmt)).all())
 
     async def get_by_canonical_name(self, canonical_name: str) -> TrendTheme | None:
-        stmt = select(TrendTheme).where(TrendTheme.canonical_name == canonical_name)
+        stmt = select(TrendTheme).where(
+            TrendTheme.canonical_name == canonical_name,
+            TrendTheme.active.is_(True),
+        )
         return await self._session.scalar(stmt)
 
     async def get_by_entity_id(self, entity_id: str) -> TrendTheme | None:
         stmt = select(TrendTheme).where(
             TrendTheme.entities["entity_id"].astext == entity_id,
+            TrendTheme.active.is_(True),
         )
         return await self._session.scalar(stmt)
 
     async def list_active_trends(self) -> list[TrendTheme]:
         stmt = select(TrendTheme).where(
+            TrendTheme.active.is_(True),
             TrendTheme.lifecycle_status != LifecycleStatus.DORMANT,
         )
         result = await self._session.scalars(stmt)
@@ -111,24 +130,99 @@ class TrendsRepository:
         await self._session.flush()
         return trend
 
+    async def sync_members(
+        self,
+        trend_id: uuid.UUID,
+        members: list[dict[str, Any]],
+        *,
+        now: datetime | None = None,
+        membership_method: MembershipMethod = MembershipMethod.RULE,
+    ) -> dict[str, int]:
+        """Upsert active members and soft-deactivate missing ones."""
+        now = now or datetime.now(UTC)
+        stmt = select(TrendMember).where(TrendMember.trend_id == trend_id)
+        existing = list((await self._session.scalars(stmt)).all())
+        by_content = {row.content_item_id: row for row in existing}
+        seen: set[uuid.UUID] = set()
+        created = 0
+        reactivated = 0
+        confirmed = 0
+
+        for member in members:
+            content_id = member["content_item_id"]
+            if isinstance(content_id, str):
+                content_id = uuid.UUID(content_id)
+            seen.add(content_id)
+            method = member.get("membership_method", membership_method)
+            if isinstance(method, str):
+                method = MembershipMethod(method)
+            row = by_content.get(content_id)
+            if row is None:
+                self._session.add(
+                    TrendMember(
+                        trend_id=trend_id,
+                        content_item_id=content_id,
+                        membership_score=member.get("membership_score"),
+                        membership_method=method,
+                        evidence=member.get("evidence"),
+                        active=True,
+                        added_at=now,
+                        last_confirmed_at=now,
+                        deactivated_at=None,
+                    ),
+                )
+                created += 1
+                continue
+            was_inactive = not row.active
+            if not may_reactivate_membership(row.membership_method, row.active, method):
+                continue
+            method_changed = False
+            if membership_method_priority(method) >= membership_method_priority(
+                row.membership_method
+            ):
+                method_changed = method != row.membership_method
+                row.membership_score = member.get("membership_score")
+                row.membership_method = method
+                row.evidence = member.get("evidence")
+            row.active = True
+            row.last_confirmed_at = now
+            row.deactivated_at = None
+            if was_inactive or method_changed:
+                row.decision_version += 1
+            if was_inactive:
+                reactivated += 1
+            else:
+                confirmed += 1
+
+        deactivated = 0
+        for content_id, row in by_content.items():
+            if content_id in seen or not row.active:
+                continue
+            if (
+                row.membership_method == MembershipMethod.MANUAL
+                and membership_method != MembershipMethod.MANUAL
+            ):
+                continue
+            row.active = False
+            row.deactivated_at = now
+            row.decision_version += 1
+            deactivated += 1
+
+        await self._session.flush()
+        return {
+            "created": created,
+            "reactivated": reactivated,
+            "confirmed": confirmed,
+            "deactivated": deactivated,
+        }
+
     async def replace_members(
         self,
         trend_id: uuid.UUID,
         members: list[dict],
     ) -> None:
-        await self._session.execute(
-            delete(TrendMember).where(TrendMember.trend_id == trend_id),
-        )
-        for member in members:
-            self._session.add(
-                TrendMember(
-                    trend_id=trend_id,
-                    content_item_id=member["content_item_id"],
-                    membership_score=member.get("membership_score"),
-                    membership_method=MembershipMethod.RULE,
-                    evidence=member.get("evidence"),
-                ),
-            )
+        """Backward-compatible wrapper around soft-sync membership."""
+        await self.sync_members(trend_id, members)
 
     async def upsert_score_snapshot(
         self,

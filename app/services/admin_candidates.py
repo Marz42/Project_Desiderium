@@ -8,15 +8,20 @@ from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
-from app.models import AngleStatus, CreativeAngle, CreativeFormat, DailyCandidate, LifecycleStatus, TrendTheme, WatchTier
+from app.models import (
+    AngleStatus,
+    CreativeFormat,
+    DailyCandidate,
+    LifecycleStatus,
+    TrendTheme,
+    WatchTier,
+)
 from app.repositories.content import ContentRepository
 from app.repositories.creative_angles import CreativeAngleRepository
 from app.repositories.daily_candidates import DailyCandidateRepository
 from app.repositories.watchlist import WatchlistRepository
 from app.services.candidate_generation import CandidateGenerationService
-
 
 LIFECYCLE_FILTERS = {
     "new": LifecycleStatus.NEW,
@@ -187,15 +192,19 @@ class AdminCandidatesService:
         stmt = select(TrendTheme).where(TrendTheme.id.in_([a.trend_id for a in angles]))
         trends = {t.id: t for t in (await self._session.scalars(stmt)).all()}
         rows: list[DailyCandidate] = []
-        for rank, angle in enumerate(angles, start=1):
+        rank = 0
+        for angle in angles:
             trend = trends.get(angle.trend_id)
+            if trend is None:
+                continue
+            rank += 1
             row = DailyCandidate(
                 date=candidate_date,
                 creative_angle_id=angle.id,
                 trend_id=angle.trend_id,
                 rank=rank,
-                candidate_score=trend.score if trend else None,
-                score_snapshot=trend.score_components if trend else None,
+                candidate_score=trend.score,
+                score_snapshot=trend.score_components,
                 selected=angle.status == AngleStatus.SELECTED,
             )
             row.creative_angle = angle

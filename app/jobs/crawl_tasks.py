@@ -9,7 +9,7 @@ from app.db import get_session_factory
 from app.jobs.mutex import acquire_batch_mutex, get_process_lock, release_batch_mutex
 from app.models import CrawlJobAdapter, CrawlJobType, WatchItemType, WatchTier
 from app.repositories.watchlist import CrawlJobRepository
-from app.services.ingestion import create_youtube_ingestion
+from app.services.ingestion import CrawlSummary, IngestionService, create_youtube_ingestion
 from app.services.quota_tracker import persist_youtube_quota
 
 logger = logging.getLogger(__name__)
@@ -137,8 +137,18 @@ async def _run_batch_crawl(
                 await release_batch_mutex(session, job_name)
 
 
-async def _crawl_all_types(ingestion, item_types: set[WatchItemType]) -> dict:
-    combined = {"total": 0, "succeeded": 0, "failed": 0, "new_items": 0, "errors": []}
+async def _crawl_all_types(
+    ingestion: IngestionService,
+    item_types: set[WatchItemType],
+) -> CrawlSummary:
+    combined: CrawlSummary = {
+        "tier": "all",
+        "total": 0,
+        "succeeded": 0,
+        "failed": 0,
+        "new_items": 0,
+        "errors": [],
+    }
     for tier in WatchTier:
         partial = await ingestion.crawl_tier(tier, item_types=item_types)
         combined["total"] += partial["total"]

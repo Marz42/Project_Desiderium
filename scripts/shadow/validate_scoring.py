@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -27,7 +28,7 @@ def run_validation(
     input_path: Path = GOLDEN_JSON_PATH,
     output_path: Path = REPORT_PATH,
     top_k: int = 15,
-) -> None:
+) -> bool:
     data = json.loads(input_path.read_text(encoding="utf-8"))
     trends = data.get("trend_summaries", [])
     videos = data.get("videos", [])
@@ -39,12 +40,8 @@ def run_validation(
         reverse=True,
     )
 
-    high_value_in_top10 = [
-        t for t in ranked_by_score[:10] if t.get("manager_value") == "high"
-    ]
-    low_value_in_top10 = [
-        t for t in ranked_by_score[:10] if t.get("manager_value") == "low"
-    ]
+    high_value_in_top10 = [t for t in ranked_by_score[:10] if t.get("manager_value") == "high"]
+    low_value_in_top10 = [t for t in ranked_by_score[:10] if t.get("manager_value") == "low"]
 
     breakout_top = sorted(videos, key=lambda v: v["breakout_ratio"], reverse=True)[:15]
     multi_channel_trends = [
@@ -96,8 +93,8 @@ def run_validation(
             len(multi_channel_trends) >= 1,
         ),
         (
-            f"Precision@{top_k} ≥ 50%",
-            p_at_k >= 0.5,
+            f"Precision@{top_k} ≥ 60%",
+            p_at_k >= 0.6,
         ),
         (
             "BreakoutRatio is populated for all videos",
@@ -155,6 +152,7 @@ def run_validation(
     output_path.write_text("\n".join(lines), encoding="utf-8")
     print(f"Validation report written to {output_path}")
     print(f"Precision@{top_k}: {p_at_k:.1%} | Recall high-value: {recall_high:.1%}")
+    return all(passed for _, passed in checks)
 
 
 def main() -> None:
@@ -163,7 +161,8 @@ def main() -> None:
     parser.add_argument("--output", type=Path, default=REPORT_PATH)
     parser.add_argument("--top-k", type=int, default=15)
     args = parser.parse_args()
-    run_validation(input_path=args.input, output_path=args.output, top_k=args.top_k)
+    if not run_validation(input_path=args.input, output_path=args.output, top_k=args.top_k):
+        sys.exit(1)
 
 
 if __name__ == "__main__":

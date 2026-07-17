@@ -35,6 +35,9 @@ LOCK_IDS = {
     "metric_snapshots": 1201,
     "trend_discovery": 1202,
     "snapshot_retention": 1203,
+    "transcript_fetch": 1301,
+    "semantic_analysis": 1302,
+    "publication_metrics": 1401,
 }
 
 
@@ -66,7 +69,7 @@ async def acquire_batch_mutex(
         logger.info("batch job %s skipped: another batch running in DB", job_name)
         return False
 
-    lock_id = LOCK_IDS.get(job_name, 1999)
+    lock_id = LOCK_IDS[job_name]
     if not await try_advisory_lock(session, lock_id):
         logger.info("batch job %s skipped: advisory lock held", job_name)
         return False
@@ -75,5 +78,5 @@ async def acquire_batch_mutex(
 
 
 async def release_batch_mutex(session: AsyncSession, job_name: str) -> None:
-    lock_id = LOCK_IDS.get(job_name, 1999)
+    lock_id = LOCK_IDS[job_name]
     await release_advisory_lock(session, lock_id)

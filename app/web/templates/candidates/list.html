@@ -110,8 +110,8 @@
             <button type="submit" class="px-2 py-1 rounded bg-slate-800 text-xs hover:bg-slate-700">保存</button>
           </form>
         </div>
-        <div class="flex flex-wrap gap-1">
-          {% for st, label in [('adopted','采用'),('published','发布'),('reusable','可复用'),('blocked','屏蔽')] %}
+        <div class="flex flex-wrap items-start gap-1">
+          {% for st, label in [('adopted','采用'),('reusable','可复用'),('blocked','屏蔽')] %}
           <form method="post" action="/candidates/angles/{{ angle.id }}/status">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <input type="hidden" name="status" value="{{ st }}">
@@ -119,6 +119,15 @@
             <button type="submit" class="px-2 py-1 text-xs rounded border border-slate-700 hover:border-slate-500">{{ label }}</button>
           </form>
           {% endfor %}
+          <form method="post" action="/candidates/angles/{{ angle.id }}/status" class="flex gap-1">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="status" value="published">
+            <input type="hidden" name="candidate_date" value="{{ date.isoformat() }}">
+            <input type="url" name="published_url" placeholder="YouTube 发布链接"
+                   value="{% for p in angle.publication_records %}{% if p.status.value == 'published' %}{{ p.published_url }}{% endif %}{% endfor %}"
+                   class="px-2 py-1 rounded bg-slate-950 border border-slate-700 text-xs w-40">
+            <button type="submit" class="px-2 py-1 text-xs rounded border border-slate-700 hover:border-slate-500">发布</button>
+          </form>
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 # Trend discovery algorithm parameters (Stage 3).
 # All thresholds live here — services must not hardcode scoring constants.
+version: "1.2"
 
 scoring:
   channel_resonance_weight: 0.35
@@ -22,8 +23,9 @@ thresholds:
   rising_ratio: 1.25
   declining_ratio: 0.80
   reviving_ratio: 1.50
-  standard_min_videos_72h: 3
+  standard_min_channels_72h: 3
   standard_breakout_ge_2_pct: 0.5
+  early_min_channels_24h: 2
   early_min_videos_24h: 2
   dormant_hours_no_video: 72
   min_cluster_members: 2
@@ -75,3 +77,46 @@ platforms:
     source_confidence: high
   tiktok:
     source_confidence: low
+
+candidates:
+  target_count: 30
+  maximum_count: 40
+  max_angles_per_trend: 4
+  max_anime_share: 0.30
+  min_new_trend_share: 0.20
+
+relevance:
+  allowed_language_prefixes: [en]
+  unknown_language_policy: allow
+  excluded_language_keywords: [hindi, "हिंदी"]
+  excluded_topic_keywords: [manhwa, webtoon, manhua]
+  generic_topic_keywords: [top 10 anime, best anime, every anime]
+  excluded_score_multiplier: 0.0
+  generic_score_multiplier: 0.25
+
+# G3: bounded embedding recall + LLM gray-zone adjudication.
+clustering:
+  enabled: true
+  max_publish_gap_days: 7
+  recall_top_k: 5
+  high_similarity: 0.88
+  low_similarity: 0.72
+  llm_min_confidence: 0.80
+  embedding:
+    provider: local_onnx  # local_onnx | remote_api | lexical
+    embedding_space: "local-onnx:all-MiniLM-L6-v2@sha256:placeholder"
+    model_name: "sentence-transformers/all-MiniLM-L6-v2"
+    model_revision: "main"
+    remote_base_url: ""
+    remote_model: ""
+    allow_lexical_fallback: true
+    cache_enabled: true
+
+# G4: public YouTube performance feedback loop (association only, not causal).
+publication:
+  team_channel_ids: []
+  windows_hours: [0, 24, 72, 168]
+  late_backfill_grace_hours: 6
+  baseline_version: "publication-velocity-v1"
+  max_consecutive_failures: 3
+  retry_backoff_hours: 24

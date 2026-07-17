@@ -16,8 +16,9 @@ RUN apt-get update \
 COPY pyproject.toml README.md ./
 COPY app ./app
 
-RUN pip install --upgrade pip \
-    && pip install --prefix=/install .
+RUN python -m venv /opt/venv \
+    && /opt/venv/bin/pip install --upgrade pip \
+    && /opt/venv/bin/pip install .
 
 FROM python:3.12-slim AS runtime
 
@@ -32,10 +33,11 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --create-home --shell /bin/bash appuser
 
-COPY --from=builder /install /opt/venv
+COPY --from=builder /opt/venv /opt/venv
 COPY pyproject.toml README.md alembic.ini ./
 COPY app ./app
 COPY migrations ./migrations
+COPY config ./config
 
 RUN chown -R appuser:appuser /app
 USER appuser

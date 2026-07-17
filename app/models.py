@@ -161,14 +161,49 @@ class PublicationStatus(str, enum.Enum):
     BLOCKED = "blocked"
 
 
+class ClusterDecisionAction(str, enum.Enum):
+    MERGE_SAME_ANGLE = "merge_same_angle"
+    MERGE_THEME_KEEP_ANGLES_SEPARATE = "merge_theme_keep_angles_separate"
+    CREATE_NEW_THEME = "create_new_theme"
+    NEEDS_REVIEW = "needs_review"
+    MANUAL_MERGE = "manual_merge"
+    MANUAL_MOVE_OUT = "manual_move_out"
+    ROLLBACK = "rollback"
+
+
+class ClusterDecisionSource(str, enum.Enum):
+    AUTO_HIGH = "auto_high"
+    AUTO_LOW = "auto_low"
+    LLM = "llm"
+    LEXICAL = "lexical"
+    MANUAL = "manual"
+
+
+class PublicationFetchStatus(str, enum.Enum):
+    PENDING = "pending"
+    SUCCESS = "success"
+    FAILED = "failed"
+
+
+class PublicationWindowKey(str, enum.Enum):
+    INITIAL = "initial"
+    H24 = "24h"
+    H72 = "72h"
+    D7 = "7d"
+
+
 class WatchItem(Base):
     __tablename__ = "watch_items"
     __table_args__ = (
-        UniqueConstraint("platform", "type", "external_id", name="uq_watch_items_platform_type_external"),
+        UniqueConstraint(
+            "platform", "type", "external_id", name="uq_watch_items_platform_type_external"
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    type: Mapped[WatchItemType] = mapped_column(Enum(WatchItemType, name="watch_item_type"), nullable=False)
+    type: Mapped[WatchItemType] = mapped_column(
+        Enum(WatchItemType, name="watch_item_type"), nullable=False
+    )
     platform: Mapped[Platform] = mapped_column(Enum(Platform, name="platform"), nullable=False)
     name: Mapped[str] = mapped_column(Text, nullable=False)
     external_id: Mapped[str] = mapped_column(Text, nullable=False)
@@ -184,7 +219,9 @@ class WatchItem(Base):
     config: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True, default=dict)
     last_success_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    last_status: Mapped[CrawlOutcome | None] = mapped_column(Enum(CrawlOutcome, name="crawl_outcome"), nullable=True)
+    last_status: Mapped[CrawlOutcome | None] = mapped_column(
+        Enum(CrawlOutcome, name="crawl_outcome"), nullable=True
+    )
     consecutive_failures: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -291,7 +328,9 @@ class Transcript(Base):
         ForeignKey("content_items.id", ondelete="CASCADE"),
         nullable=False,
     )
-    source: Mapped[TranscriptSource] = mapped_column(Enum(TranscriptSource, name="transcript_source"), nullable=False)
+    source: Mapped[TranscriptSource] = mapped_column(
+        Enum(TranscriptSource, name="transcript_source"), nullable=False
+    )
     language: Mapped[str | None] = mapped_column(String(16), nullable=True)
     text: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[TranscriptStatus] = mapped_column(
@@ -331,7 +370,9 @@ class ChannelBaseline(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     channel_external_id: Mapped[str] = mapped_column(Text, nullable=False)
     platform: Mapped[Platform] = mapped_column(Enum(Platform, name="platform"), nullable=False)
-    age_bucket: Mapped[AgeBucket] = mapped_column(Enum(AgeBucket, name="age_bucket"), nullable=False)
+    age_bucket: Mapped[AgeBucket] = mapped_column(
+        Enum(AgeBucket, name="age_bucket"), nullable=False
+    )
     sample_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     median_velocity: Mapped[float | None] = mapped_column(Float, nullable=True)
     p25_velocity: Mapped[float | None] = mapped_column(Float, nullable=True)
@@ -354,7 +395,9 @@ class TrendTheme(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     canonical_name: Mapped[str] = mapped_column(Text, nullable=False)
     anime_title: Mapped[str | None] = mapped_column(Text, nullable=True)
-    topic_type: Mapped[TopicType] = mapped_column(Enum(TopicType, name="topic_type"), nullable=False)
+    topic_type: Mapped[TopicType] = mapped_column(
+        Enum(TopicType, name="topic_type"), nullable=False
+    )
     entities: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True, default=dict)
     first_detected_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -375,6 +418,12 @@ class TrendTheme(Base):
     score_components: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
     summary_zh: Mapped[str | None] = mapped_column(Text, nullable=True)
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    merged_into_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("trend_themes.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -391,6 +440,11 @@ class TrendTheme(Base):
     creative_angles: Mapped[list[CreativeAngle]] = relationship(back_populates="trend")
     daily_candidates: Mapped[list[DailyCandidate]] = relationship(back_populates="trend")
     score_snapshots: Mapped[list[TrendScoreSnapshot]] = relationship(back_populates="trend")
+    facets: Mapped[list[TrendFacet]] = relationship(back_populates="trend")
+    cluster_decisions: Mapped[list[ClusterDecisionAudit]] = relationship(
+        back_populates="target_trend",
+        foreign_keys="ClusterDecisionAudit.target_trend_id",
+    )
 
 
 class TrendScoreSnapshot(Base):
@@ -448,11 +502,22 @@ class TrendMember(Base):
         default=MembershipMethod.RULE,
     )
     evidence: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     added_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
     )
+    last_confirmed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+    deactivated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    decision_version: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     trend: Mapped[TrendTheme] = relationship(back_populates="members")
     content_item: Mapped[ContentItem] = relationship(back_populates="trend_memberships")
@@ -460,6 +525,14 @@ class TrendMember(Base):
 
 class CreativeAngle(Base):
     __tablename__ = "creative_angles"
+    __table_args__ = (
+        UniqueConstraint(
+            "trend_id",
+            "generated_date",
+            "semantic_fingerprint",
+            name="uq_creative_angles_trend_date_fingerprint",
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     trend_id: Mapped[uuid.UUID] = mapped_column(
@@ -468,8 +541,12 @@ class CreativeAngle(Base):
         nullable=False,
     )
     angle_zh: Mapped[str] = mapped_column(Text, nullable=False)
-    format: Mapped[CreativeFormat] = mapped_column(Enum(CreativeFormat, name="creative_format"), nullable=False)
-    evidence_content_ids: Mapped[list[Any] | None] = mapped_column(JSONB, nullable=True, default=list)
+    format: Mapped[CreativeFormat] = mapped_column(
+        Enum(CreativeFormat, name="creative_format"), nullable=False
+    )
+    evidence_content_ids: Mapped[list[Any] | None] = mapped_column(
+        JSONB, nullable=True, default=list
+    )
     generated_date: Mapped[date] = mapped_column(Date, nullable=False)
     generation_source: Mapped[GenerationSource] = mapped_column(
         Enum(GenerationSource, name="generation_source"),
@@ -498,8 +575,30 @@ class CreativeAngle(Base):
     trend: Mapped[TrendTheme] = relationship(back_populates="creative_angles")
     daily_candidates: Mapped[list[DailyCandidate]] = relationship(back_populates="creative_angle")
     brief_items: Mapped[list[BriefItem]] = relationship(back_populates="creative_angle")
-    publication_records: Mapped[list[PublicationRecord]] = relationship(back_populates="creative_angle")
+    publication_records: Mapped[list[PublicationRecord]] = relationship(
+        back_populates="creative_angle"
+    )
     status_audits: Mapped[list[AngleStatusAudit]] = relationship(back_populates="creative_angle")
+
+
+class AnalysisRun(Base):
+    __tablename__ = "analysis_runs"
+    __table_args__ = (Index("ix_analysis_runs_date_kind", "run_date", "run_kind"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    run_date: Mapped[date] = mapped_column(Date, nullable=False)
+    run_kind: Mapped[str] = mapped_column(String(64), nullable=False)
+    scoring_version: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    algorithm_version: Mapped[str] = mapped_column(String(64), nullable=False)
+    config_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    run_fingerprint: Mapped[str] = mapped_column(String(64), nullable=False, default="legacy")
+    config_snapshot: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    prompt_versions: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    summary: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+
+    daily_candidates: Mapped[list[DailyCandidate]] = relationship(back_populates="analysis_run")
 
 
 class DailyCandidate(Base):
@@ -524,7 +623,17 @@ class DailyCandidate(Base):
     rank: Mapped[int] = mapped_column(Integer, nullable=False)
     candidate_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     score_snapshot: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    trend_score_snapshot: Mapped[float | None] = mapped_column(Float, nullable=True)
+    lifecycle_status_snapshot: Mapped[LifecycleStatus | None] = mapped_column(
+        Enum(LifecycleStatus, name="lifecycle_status"),
+        nullable=True,
+    )
     selected: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    analysis_run_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("analysis_runs.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -533,13 +642,12 @@ class DailyCandidate(Base):
 
     creative_angle: Mapped[CreativeAngle] = relationship(back_populates="daily_candidates")
     trend: Mapped[TrendTheme] = relationship(back_populates="daily_candidates")
+    analysis_run: Mapped[AnalysisRun | None] = relationship(back_populates="daily_candidates")
 
 
 class Brief(Base):
     __tablename__ = "briefs"
-    __table_args__ = (
-        UniqueConstraint("brief_date", name="uq_briefs_brief_date"),
-    )
+    __table_args__ = (UniqueConstraint("brief_date", name="uq_briefs_brief_date"),)
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     brief_date: Mapped[date] = mapped_column(Date, nullable=False)
@@ -562,8 +670,14 @@ class Brief(Base):
         onupdate=func.now(),
     )
     exported_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    finalized_snapshot: Mapped[list[dict[str, Any]] | None] = mapped_column(JSONB, nullable=True)
+    finalized_content_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    finalized_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    finalized_by: Mapped[str | None] = mapped_column(String(128), nullable=True)
 
-    items: Mapped[list[BriefItem]] = relationship(back_populates="brief", order_by="BriefItem.position")
+    items: Mapped[list[BriefItem]] = relationship(
+        back_populates="brief", order_by="BriefItem.position"
+    )
 
 
 class BriefItem(Base):
@@ -598,7 +712,9 @@ class BriefItem(Base):
 
 class AngleStatusAudit(Base):
     __tablename__ = "angle_status_audits"
-    __table_args__ = (Index("ix_angle_status_audits_angle_created", "creative_angle_id", "created_at"),)
+    __table_args__ = (
+        Index("ix_angle_status_audits_angle_created", "creative_angle_id", "created_at"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     creative_angle_id: Mapped[uuid.UUID] = mapped_column(
@@ -606,8 +722,12 @@ class AngleStatusAudit(Base):
         ForeignKey("creative_angles.id", ondelete="CASCADE"),
         nullable=False,
     )
-    from_status: Mapped[AngleStatus | None] = mapped_column(Enum(AngleStatus, name="angle_status"), nullable=True)
-    to_status: Mapped[AngleStatus] = mapped_column(Enum(AngleStatus, name="angle_status"), nullable=False)
+    from_status: Mapped[AngleStatus | None] = mapped_column(
+        Enum(AngleStatus, name="angle_status"), nullable=True
+    )
+    to_status: Mapped[AngleStatus] = mapped_column(
+        Enum(AngleStatus, name="angle_status"), nullable=False
+    )
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -620,6 +740,13 @@ class AngleStatusAudit(Base):
 
 class PublicationRecord(Base):
     __tablename__ = "publication_records"
+    __table_args__ = (
+        UniqueConstraint(
+            "platform",
+            "external_video_id",
+            name="uq_publication_records_platform_video",
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     creative_angle_id: Mapped[uuid.UUID] = mapped_column(
@@ -634,6 +761,42 @@ class PublicationRecord(Base):
     published_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    platform: Mapped[Platform | None] = mapped_column(
+        Enum(Platform, name="platform"), nullable=True
+    )
+    external_video_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    channel_external_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    trend_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("trend_themes.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    daily_candidate_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("daily_candidates.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    brief_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("briefs.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    brief_finalized_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    format: Mapped[CreativeFormat | None] = mapped_column(
+        Enum(CreativeFormat, name="creative_format"), nullable=True
+    )
+    fetch_status: Mapped[PublicationFetchStatus | None] = mapped_column(
+        Enum(PublicationFetchStatus, name="publication_fetch_status"),
+        nullable=True,
+    )
+    last_fetch_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    last_fetched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    consecutive_fetch_failures: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    next_retry_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    terminal_fetch_failure: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -641,6 +804,165 @@ class PublicationRecord(Base):
     )
 
     creative_angle: Mapped[CreativeAngle] = relationship(back_populates="publication_records")
+    trend: Mapped[TrendTheme | None] = relationship()
+    daily_candidate: Mapped[DailyCandidate | None] = relationship()
+    metric_snapshots: Mapped[list[PublicationMetricSnapshot]] = relationship(
+        back_populates="publication_record",
+        order_by="PublicationMetricSnapshot.captured_at",
+    )
+
+
+class PublicationMetricSnapshot(Base):
+    __tablename__ = "publication_metric_snapshots"
+    __table_args__ = (
+        UniqueConstraint(
+            "publication_record_id",
+            "window_key",
+            name="uq_publication_metric_snapshots_record_window",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    publication_record_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("publication_records.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    window_key: Mapped[PublicationWindowKey] = mapped_column(
+        Enum(PublicationWindowKey, name="publication_window_key"),
+        nullable=False,
+    )
+    captured_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    video_age_hours: Mapped[float] = mapped_column(Float, nullable=False)
+    age_bucket: Mapped[AgeBucket | None] = mapped_column(
+        Enum(AgeBucket, name="age_bucket"), nullable=True
+    )
+    views: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
+    likes: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    comments: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    source: Mapped[str] = mapped_column(String(32), nullable=False, default="youtube_public")
+    late_backfill: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    baseline_velocity: Mapped[float | None] = mapped_column(Float, nullable=True)
+    baseline_sample_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    baseline_confidence: Mapped[BaselineConfidence | None] = mapped_column(
+        Enum(BaselineConfidence, name="baseline_confidence"), nullable=True
+    )
+    performance_ratio: Mapped[float | None] = mapped_column(Float, nullable=True)
+    baseline_version: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    calculated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    observed_ratio_at_window: Mapped[float | None] = mapped_column(Float, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+    publication_record: Mapped[PublicationRecord] = relationship(back_populates="metric_snapshots")
+
+
+class EmbeddingCache(Base):
+    __tablename__ = "embedding_cache"
+    __table_args__ = (
+        UniqueConstraint(
+            "embedding_space",
+            "input_hash",
+            name="uq_embedding_cache_space_input",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    embedding_space: Mapped[str] = mapped_column(String(128), nullable=False)
+    provider: Mapped[str] = mapped_column(String(64), nullable=False)
+    model_name: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    model_revision: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    input_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    vector: Mapped[list[Any]] = mapped_column(JSONB, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+
+class TrendFacet(Base):
+    __tablename__ = "trend_facets"
+    __table_args__ = (UniqueConstraint("trend_id", "facet_key", name="uq_trend_facets_trend_key"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    trend_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("trend_themes.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    facet_key: Mapped[str] = mapped_column(String(128), nullable=False)
+    label: Mapped[str] = mapped_column(Text, nullable=False)
+    evidence: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+    trend: Mapped[TrendTheme] = relationship(back_populates="facets")
+
+
+class ClusterDecisionAudit(Base):
+    __tablename__ = "cluster_decision_audits"
+    __table_args__ = (
+        Index("ix_cluster_decision_audits_created", "created_at"),
+        Index("ix_cluster_decision_audits_target", "target_trend_id", "created_at"),
+        UniqueConstraint(
+            "rollback_of_id",
+            name="uq_cluster_decision_audits_rollback_of",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source_cluster_key: Mapped[str] = mapped_column(String(128), nullable=False)
+    target_trend_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("trend_themes.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    action: Mapped[ClusterDecisionAction] = mapped_column(
+        Enum(ClusterDecisionAction, name="cluster_decision_action"),
+        nullable=False,
+    )
+    source: Mapped[ClusterDecisionSource] = mapped_column(
+        Enum(ClusterDecisionSource, name="cluster_decision_source"),
+        nullable=False,
+    )
+    similarity: Mapped[float | None] = mapped_column(Float, nullable=True)
+    confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
+    embedding_space: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    evidence: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    decision_version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    rolled_back: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    rolled_back_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    rollback_audit_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("cluster_decision_audits.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    rollback_of_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("cluster_decision_audits.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+    target_trend: Mapped[TrendTheme | None] = relationship(
+        back_populates="cluster_decisions",
+        foreign_keys=[target_trend_id],
+    )
 
 
 class WorkerHeartbeat(Base):
@@ -653,7 +975,9 @@ class WorkerHeartbeat(Base):
 
 class ApiQuotaDaily(Base):
     __tablename__ = "api_quota_daily"
-    __table_args__ = (UniqueConstraint("provider", "usage_date", name="uq_api_quota_daily_provider_date"),)
+    __table_args__ = (
+        UniqueConstraint("provider", "usage_date", name="uq_api_quota_daily_provider_date"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     provider: Mapped[str] = mapped_column(String(32), nullable=False)
@@ -701,8 +1025,12 @@ class CrawlJob(Base):
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    adapter: Mapped[CrawlJobAdapter] = mapped_column(Enum(CrawlJobAdapter, name="crawl_job_adapter"), nullable=False)
-    job_type: Mapped[CrawlJobType] = mapped_column(Enum(CrawlJobType, name="crawl_job_type"), nullable=False)
+    adapter: Mapped[CrawlJobAdapter] = mapped_column(
+        Enum(CrawlJobAdapter, name="crawl_job_adapter"), nullable=False
+    )
+    job_type: Mapped[CrawlJobType] = mapped_column(
+        Enum(CrawlJobType, name="crawl_job_type"), nullable=False
+    )
     watch_item_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("watch_items.id", ondelete="SET NULL"),

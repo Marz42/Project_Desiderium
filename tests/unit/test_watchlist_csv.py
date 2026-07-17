@@ -2,7 +2,6 @@
 
 from app.schemas.watchlist import parse_csv_content, parse_csv_row
 
-
 SAMPLE_CSV = """type,platform,name,url_or_id,tier,tags,note,enabled
 channel,youtube,Test Channel,UCgR3SrM8T6GCFUTuxSFlR7A,priority,"anime,recap",note,true
 keyword,youtube,anime recap,,general,search,generic,true

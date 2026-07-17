@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.youtube import YouTubeAdapter
 from app.domain.trend_metrics import is_snapshot_due
-from app.models import Platform, SourceQuality
+from app.models import SourceQuality
 from app.repositories.metrics import MetricsRepository
 from app.services.scoring_config import ScoringConfig, get_scoring_config
 

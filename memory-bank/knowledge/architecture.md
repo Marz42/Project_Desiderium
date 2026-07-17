@@ -3,7 +3,7 @@ type: paradigma-architecture
 title: System Architecture
 description: Application architecture for Desiderium — FastAPI web, APScheduler worker, PostgreSQL, and platform adapters.
 tags: [architecture, fastapi, postgresql, worker, adapters]
-timestamp: 2026-07-17T09:09:00+08:00
+timestamp: 2026-07-17T13:13:00+08:00
 paradigma:
   schema_version: "0.1"
   temperature: hot
@@ -51,7 +51,7 @@ Desiderium 是一个单实例番剧趋势情报系统，由三个进程组成：
 | Scheduling | APScheduler（独立 worker 进程） | 无 Redis / Celery；互斥用 PG advisory lock |
 | Config | pydantic-settings（`.env`）+ YAML（`config/`） | 算法阈值全部在 `config/scoring.yaml` |
 | HTTP client | httpx（async） | YouTube / TikTok / LLM 调用 |
-| Testing | pytest + pytest-asyncio | `tests/unit/`，75 个测试 |
+| Testing | pytest + pytest-asyncio | `tests/unit/` + `tests/integration/`；MyPy blocking |
 | Deployment | Docker Compose（dev/prod）、Caddy HTTPS、systemd 可选 | `docker-compose.prod.yml`、`deploy/` |
 | Agent memory | Paradigma harness（OKF-compatible Markdown） | `.paradigma/tools/` 标准库 Python |
 
@@ -65,7 +65,7 @@ Desiderium 是一个单实例番剧趋势情报系统，由三个进程组成：
 | Adapters | YouTube / TikTok / 字幕 / LLM 平台隔离 | `app/adapters/{youtube,tiktok,transcript,llm}/` |
 | Services | 采集、快照、基准、聚类、评分、生命周期、语义分析、候选生成、简报导出、运维状态 | `app/services/` |
 | Repositories | 数据访问层（async session） | `app/repositories/` |
-| Models | 18 张表的 ORM 定义与枚举 | `app/models.py` |
+| Models | 22+ 张表的 ORM 定义与枚举（含 analysis/publication/clustering 审计） | `app/models.py` |
 | Jobs | 定时任务（crawl / trend / transcript / semantic / tiktok / ops）+ 互斥 | `app/jobs/` |
 | Web UI | SSR 路由 + Jinja 模板（五页业务界面） | `app/web/routes/`、`app/web/templates/` |
 | Runtime config | scoring / llm / tiktok / prompts / 实体词典 | `config/` |
@@ -112,15 +112,13 @@ TikTok 实验数据在启用时经 `TikTokIngestionService` 进入 `content_item
 
 # Open Questions
 
-- **CI 覆盖缺口**：`.github/workflows/check.yml` 只在 Python 3.11 上运行 memory-bank 校验，未运行应用 pytest（应用要求 ≥3.12），也未验证 Alembic 迁移。
-- **聚类第二 / 三层未实现**：MVP 只有规则聚类（`config/anime_entities.yaml`）；文本向量召回与 LLM 歧义裁决仍是设计目标（见 mvp-plan 第 9 节）。
+- **G3/G4 真实观察门**：代码自动门已交付；误合并/误拆分抽样与 ≥14 天 / ≥20 条发布表现观察仍待真实流量。
 - **冷启动基准**：系统上线前 2—4 周只有低置信度估算基准，见 known-issue。
-- **影子验证误报**：Hindi / manhwa 内容触发高共振误报，语言过滤与 manager-value 惩罚待校准，见 known-issue。
-- **团队账号反馈闭环**：`publication_records` 目前只有 `published_url` / `published_at`；播放/点赞/评论反馈字段尚未建模，也未接入自有 YouTube 账号数据。
-- **任务互斥缺口**：`transcript_fetch` 与 `semantic_analysis` 共用默认 advisory lock 与 TRANSCRIPT 批次键（见 known-issue）。
-- **开发镜像缺配置**：根 `Dockerfile` 未 `COPY config/`，`docker compose` Quick Start 镜像缺少评分/LLM YAML（见 known-issue）。
+- **相关性规则校准**：明确 Hindi/manhwa 已过滤、generic 已降权；未知语言保守放行，真实 Beta 流量仍需观察误杀/漏报。
+- **Embedding 模型预置**：默认 local ONNX，缺失时 lexical 降级；生产镜像是否预下载模型取决于部署策略。
 - **单管理者假设**：认证是单密码 + 签名 session cookie；多用户 / RBAC 是明确的 post-MVP 项。
 - **ASR 实际能力**：字幕链路默认为公开字幕 → 元数据降级；`NullAsrAdapter` 占位，无真实 ASR 供应商接入。
+- **YouTube OAuth / Analytics**：仍是 non-goal；G4 仅用公开 Data API。
 
 # Citations
 

@@ -23,13 +23,22 @@ def determine_lifecycle_status(
     now = datetime.now(UTC)
     trend_age_hours = (now - first_detected_at).total_seconds() / 3600.0
 
-    if activity_last_24h < cfg.lifecycle.dormant_activity_threshold and latest_video_age_hours > cfg.thresholds.dormant_hours_no_video:
+    if (
+        activity_last_24h < cfg.lifecycle.dormant_activity_threshold
+        and latest_video_age_hours > cfg.thresholds.dormant_hours_no_video
+    ):
         return LifecycleStatus.DORMANT
 
-    if trend_age_hours <= cfg.lifecycle.new_max_age_hours and previous_status in {None, LifecycleStatus.NEW}:
+    if trend_age_hours <= cfg.lifecycle.new_max_age_hours and previous_status in {
+        None,
+        LifecycleStatus.NEW,
+    }:
         return LifecycleStatus.NEW
 
-    if previous_status in {LifecycleStatus.DECLINING, LifecycleStatus.DORMANT} and growth_ratio >= cfg.thresholds.reviving_ratio:
+    if (
+        previous_status in {LifecycleStatus.DECLINING, LifecycleStatus.DORMANT}
+        and growth_ratio >= cfg.thresholds.reviving_ratio
+    ):
         return LifecycleStatus.REVIVING
 
     if growth_ratio >= cfg.thresholds.rising_ratio:
@@ -53,7 +62,8 @@ class LifecycleService:
         members: list[dict],
         snapshot_date,
     ) -> LifecycleStatus:
-        activity_last = cluster_activity(members, config=self._config)
+        now = datetime.now(UTC)
+        activity_last = cluster_activity(members, now=now, config=self._config)
 
         previous_snapshot = await self._trends.get_previous_score_snapshot(trend.id, snapshot_date)
         activity_prev = 0.0
@@ -63,7 +73,6 @@ class LifecycleService:
         growth_ratio = compute_growth_ratio(activity_last, activity_prev, config=self._config)
 
         latest_age = 9999.0
-        now = datetime.now(UTC)
         for member in members:
             published = member.get("published_at")
             if published is None:

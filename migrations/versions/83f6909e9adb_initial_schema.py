@@ -29,14 +29,16 @@ LATER_REVISION_TABLES = {
     "worker_heartbeats",  # c8d9e0f1a2b3
     "api_quota_daily",  # c8d9e0f1a2b3
     "llm_usage_logs",  # c8d9e0f1a2b3
+    "publication_metric_snapshots",  # e5f6a7b8c9d0
+    "embedding_cache",  # f6a7b8c9d0e1
+    "trend_facets",  # f6a7b8c9d0e1
+    "cluster_decision_audits",  # f6a7b8c9d0e1
 }
 
 
 def _initial_tables():
     return [
-        table
-        for table in Base.metadata.sorted_tables
-        if table.name not in LATER_REVISION_TABLES
+        table for table in Base.metadata.sorted_tables if table.name not in LATER_REVISION_TABLES
     ]
 
 

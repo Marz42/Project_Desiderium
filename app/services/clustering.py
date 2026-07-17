@@ -7,7 +7,12 @@ from typing import Any
 
 from app.domain.trend_metrics import normalize_title
 from app.models import TopicType
-from app.services.scoring_config import EntityDictionary, EntityRule, get_entity_dictionary, get_scoring_config
+from app.services.scoring_config import (
+    EntityDictionary,
+    EntityRule,
+    get_entity_dictionary,
+    get_scoring_config,
+)
 
 
 @dataclass(frozen=True)
@@ -132,6 +137,10 @@ def assignments_to_member_rows(
                 "views": video.get("views", 0),
                 "incremental_views": video.get("incremental_views", 0),
                 "published_at": video.get("published_at"),
+                "relevance_category": video.get("relevance_category"),
+                "relevance_multiplier": video.get("relevance_multiplier", 1.0),
+                "language": video.get("language"),
+                "title": video.get("title") or video.get("title_original"),
             }
         )
     return rows

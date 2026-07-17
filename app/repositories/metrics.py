@@ -141,7 +141,7 @@ class MetricsRepository:
             )
         )
         result = await self._session.execute(stmt)
-        return list(result.all())
+        return [(item, snapshot) for item, snapshot in result.tuples().all()]
 
     async def list_content_for_baseline(
         self,

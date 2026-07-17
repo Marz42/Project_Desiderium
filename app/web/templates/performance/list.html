@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}发布表现回收 — Desiderium{% endblock %}
+{% block content %}
+<div class="mb-6">
+  <h2 class="text-2xl font-semibold">发布表现回收</h2>
+  <p class="text-slate-400 text-sm mt-2 max-w-3xl">
+    以下指标反映趋势引擎推荐结果与公开 YouTube 数据表现之间的<strong class="text-amber-400">关联关系</strong>，
+    <strong class="text-amber-400">不构成因果推断</strong>（未控制选题时机、标题缩略图质量、平台分发算法等混杂因素）。
+    G4 观察门要求 ≥14 天、≥20 条有效发布记录才可视为可信趋势；当前样本量：{{ sample_size }}。
+  </p>
+</div>
+
+<section class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+  <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+    <p class="text-xs text-slate-400">已入选</p>
+    <p class="text-2xl font-semibold mt-1">{{ funnel.selected_count }}</p>
+  </div>
+  <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+    <p class="text-xs text-slate-400">已采用</p>
+    <p class="text-2xl font-semibold mt-1">{{ funnel.adopted_count }}</p>
+  </div>
+  <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+    <p class="text-xs text-slate-400">已发布</p>
+    <p class="text-2xl font-semibold mt-1">{{ funnel.published_count }}</p>
+  </div>
+  <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+    <p class="text-xs text-slate-400">采用率（采用/入选）</p>
+    <p class="text-2xl font-semibold mt-1">{{ '%.0f%%'|format(funnel.adopt_rate * 100) if funnel.adopt_rate is not none else '—' }}</p>
+  </div>
+  <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+    <p class="text-xs text-slate-400">发布率（发布/采用）</p>
+    <p class="text-2xl font-semibold mt-1">{{ '%.0f%%'|format(funnel.publish_rate * 100) if funnel.publish_rate is not none else '—' }}</p>
+  </div>
+</section>
+
+<section class="mb-6 bg-slate-900 border border-slate-800 rounded-xl p-4">
+  <p class="text-xs text-slate-400">平均发布用时（采用 → 发布）</p>
+  <p class="text-xl font-semibold mt-1">
+    {% if funnel.avg_time_to_publish_hours is not none %}
+      {{ '%.1f'|format(funnel.avg_time_to_publish_hours) }} 小时
+    {% else %}—{% endif %}
+  </p>
+</section>
+
+<section class="mb-8">
+  <h3 class="text-lg font-medium mb-3">各窗口 PerformanceRatio 均值</h3>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm bg-slate-900 border border-slate-800 rounded-xl">
+      <thead>
+        <tr class="text-left text-slate-400 border-b border-slate-800">
+          <th class="px-3 py-2">窗口</th>
+          <th class="px-3 py-2">样本数</th>
+          <th class="px-3 py-2">平均 PerformanceRatio</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for key in window_order %}
+        {% set stat = window_stats.get(key, {}) %}
+        <tr class="border-b border-slate-800/60">
+          <td class="px-3 py-2">{{ key }}</td>
+          <td class="px-3 py-2">{{ stat.count or 0 }}</td>
+          <td class="px-3 py-2">
+            {% if stat.avg_performance_ratio is not none %}{{ '%.2f'|format(stat.avg_performance_ratio) }}{% else %}—{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% macro breakdown_table(title, groups) %}
+<div class="mb-8">
+  <h3 class="text-lg font-medium mb-3">{{ title }}</h3>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm bg-slate-900 border border-slate-800 rounded-xl">
+      <thead>
+        <tr class="text-left text-slate-400 border-b border-slate-800">
+          <th class="px-3 py-2">分组</th>
+          {% for key in window_order %}
+          <th class="px-3 py-2">{{ key }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% if not groups %}
+        <tr><td class="px-3 py-3 text-slate-500" colspan="{{ window_order|length + 1 }}">暂无数据</td></tr>
+        {% endif %}
+        {% for group_key, windows in groups.items() %}
+        <tr class="border-b border-slate-800/60">
+          <td class="px-3 py-2 font-medium">{{ group_key }}</td>
+          {% for key in window_order %}
+          {% set stat = windows.get(key, {}) %}
+          <td class="px-3 py-2">
+            {% if stat.avg_performance_ratio is not none %}
+              {{ '%.2f'|format(stat.avg_performance_ratio) }} <span class="text-slate-500">(n={{ stat.count }})</span>
+            {% else %}—{% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endmacro %}
+
+{{ breakdown_table('按创作形式（format）', by_format) }}
+{{ breakdown_table('按生命周期状态（lifecycle）', by_lifecycle) }}
+{{ breakdown_table('按趋势分数段（score band）', by_score_band) }}
+{% endblock %}

@@ -3,7 +3,7 @@ type: paradigma-runtime-state
 title: Active Task
 description: Current active task state for the Agent session.
 tags: [runtime, active-task]
-timestamp: 2026-07-17T09:54:00+08:00
+timestamp: 2026-07-17T14:32:00+08:00
 paradigma:
   layer: runtime
   temperature: hot
@@ -17,31 +17,33 @@ paradigma:
 
 ## Task ID
 
-2026-07-17-fix-migration-p0
+2026-07-17-iteration-5-beta-observation
 
 ## User Request
 
-修复 fresh database migration P0 blocker，并给出与 project-brief 对照的审查报告。
+实施 Iteration 5: Beta Observation and Calibration，先修复并发与幂等契约，再补 G3/G4 观察工具和测试。
 
 ## Current Status
 
-completed — 迁移链修复并实测通过（v0.7.2），审查报告已交付。
+completed — 0.10.0 代码、迁移、测试与观察脚本已交付；真实 G3/G4 观察门仍待流量。
 
 ## Checklist
 
-- [x] 初始迁移排除后续 revision 拥有的表
-- [x] 枚举复用改 `postgresql.ENUM(..., create_type=False)`
-- [x] `ix_metric_snapshots_content_captured` 加 `if_not_exists`
-- [x] fresh PostgreSQL 16 upgrade / downgrade / re-upgrade 实测
-- [x] 75/75 pytest 通过
-- [x] known-issue 标记 Resolved，契约 / changelog / 版本号更新（0.7.2）
-- [x] 输出中文审查报告
+- [x] 发布 URL 唯一约束与 Brief finalize 原子不可变
+- [x] 成员决策优先级与快照式事务回滚
+- [x] Analysis Run / 历史快照 / 基准版本 / 重试退避
+- [x] G3/G4 回归与并发集成测试
+- [x] G3/G4 只读观察报告与数据集隔离
+- [x] Memory-Bank、0.10.0 与全量工程门
 
 ## Relevant Knowledge
 
-- `knowledge/known-issues/fresh-database-migration-fails.md`（Resolved）
+- `knowledge/plans/iteration-5-beta-observation.md`
+- `knowledge/plans/g3-g4-stabilization-plan.md`
+- `knowledge/decisions/adr-004-bounded-embedding-llm-clustering.md`
+- `knowledge/domains/trend-engine.md`
+- `knowledge/domains/admin-web.md`
 - `knowledge/contracts/data-model-contract.md`
-- `logs/progress/2026-07-17-full-project-test.md`
 
 ## Blockers
 
@@ -49,4 +51,6 @@ completed — 迁移链修复并实测通过（v0.7.2），审查报告已交付
 
 ## Notes
 
-剩余优先项：P1 mutex 键分离、开发 Dockerfile 补 config、CI 加 pytest + fresh migration 集成测试。
+里程碑仍是 MVP Feature Complete / Beta Readiness: Not Ready，直到真实流量满足 G3 抽样与 G4 ≥14 天 / ≥20 条发布观察门。
+
+试运行操作手册已就绪：`knowledge/manuals/desiderium-beta-trial.md`（三阶段流程、基线冻结、停止条件、Beta Ready 判定）。下一步按阶段 1 影子运行启动。
