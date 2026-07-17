@@ -1,9 +1,9 @@
 ---
 type: paradigma-architecture
 title: System Architecture
-description: Top-level OKF-compatible architecture and protocol boundaries for Project Paradigma.
-tags: [architecture, okf, memory-bank]
-timestamp: 2026-07-05T11:45:00+08:00
+description: Application architecture for Desiderium — FastAPI web, APScheduler worker, PostgreSQL, and platform adapters.
+tags: [architecture, fastapi, postgresql, worker, adapters]
+timestamp: 2026-07-17T09:09:00+08:00
 paradigma:
   schema_version: "0.1"
   temperature: hot
@@ -12,141 +12,116 @@ paradigma:
   epistemic_status: confirmed
   retrieval_hints:
     zh:
-      - 总体架构
-      - 三态记忆结构
-      - 工具链边界
+      - 系统架构
+      - 模块边界
+      - 数据流
+      - 进程拓扑
     en:
       - system architecture
-      - memory structure
-      - tooling boundaries
+      - module boundaries
+      - data flow
+      - process topology
   symbols:
-    - AGENT_RULES.md
-    - memory-bank/runtime
-    - memory-bank/knowledge
+    - app/main.py
+    - app/worker.py
+    - SourceAdapter
+    - app/services
   relations:
     related_to:
       - /contracts/repository-contract.md
-      - /decisions/adr-002-okf-compatible-memory-runtime.md
+      - /contracts/web-api-contract.md
+      - /contracts/data-model-contract.md
+      - /contracts/scheduler-jobs-contract.md
 ---
 
 # Overview
 
-Project Paradigma 是一个 OKF-compatible Agent Memory Runtime Framework。它用 Markdown + YAML frontmatter 维护长期知识，用 runtime/logs/knowledge 三态结构区分当前状态、过程记录和可复用知识，并用 `.paradigma/tools/` 中的确定性工具做最小校验和索引同步。
+Desiderium 是一个单实例番剧趋势情报系统，由三个进程组成：FastAPI Web（SSR 管理后台 + API）、APScheduler Worker（采集与分析任务）、PostgreSQL 16。外部平台（YouTube / TikTok / 字幕 / LLM）全部通过独立适配器接入，领域层不依赖任何具体供应商。
+
+本仓库同时内嵌 Paradigma Memory-Bank harness（`memory-bank/`、`.paradigma/tools/`、`AGENT_RULES.md`），用于 Agent 长期记忆维护，与应用运行时互不依赖。
 
 # Technology Stack
 
 | Layer | Choice | Notes |
 |-------|--------|-------|
-| Knowledge format | OKF-compatible Markdown | Concept 文档使用 YAML frontmatter，至少包含非空 `type` |
-| Runtime protocol | `AGENT_RULES.md` + IDE adapters | `AGENT_RULES.md` 是协议源头，Cursor rule 是适配器 |
-| Tooling | Python standard library | MVP 工具无第三方依赖 |
-| Versioning | SemVer + `VERSION` | 模板库结构和协议变更按 `conventions.md` 评估 |
-
-# Directory Structure
-
-```text
-paradigma/
-├── README.md
-├── AGENT_RULES.md
-├── INIT_PROMPT.md
-├── VERSION
-├── docs/
-│   └── rfc/
-├── .cursor/
-│   └── rules/
-├── .paradigma/
-│   ├── config.yaml
-│   ├── schemas/
-│   └── tools/
-├── memory-bank-template/
-│   ├── runtime/
-│   ├── logs/
-│   └── knowledge/
-└── memory-bank/
-    ├── runtime/
-    ├── logs/
-    └── knowledge/
-```
+| Language | Python ≥ 3.12 | `pyproject.toml` |
+| Web | FastAPI + Uvicorn | SSR 页面用 Jinja2 + HTMX + Tailwind CDN |
+| ORM / Migration | SQLAlchemy 2 async + asyncpg + Alembic | 迁移随容器启动自动执行 |
+| Database | PostgreSQL 16 | 单库，含时间序列快照表 |
+| Scheduling | APScheduler（独立 worker 进程） | 无 Redis / Celery；互斥用 PG advisory lock |
+| Config | pydantic-settings（`.env`）+ YAML（`config/`） | 算法阈值全部在 `config/scoring.yaml` |
+| HTTP client | httpx（async） | YouTube / TikTok / LLM 调用 |
+| Testing | pytest + pytest-asyncio | `tests/unit/`，75 个测试 |
+| Deployment | Docker Compose（dev/prod）、Caddy HTTPS、systemd 可选 | `docker-compose.prod.yml`、`deploy/` |
+| Agent memory | Paradigma harness（OKF-compatible Markdown） | `.paradigma/tools/` 标准库 Python |
 
 # Module Boundaries
 
 | Module | Responsibility | Path |
 |--------|----------------|------|
-| Protocol source | IDE-agnostic Agent runtime rules | `AGENT_RULES.md` |
-| Cursor adapter | Cursor-specific always-on rule | `.cursor/rules/memory-bank-protocol.mdc` |
-| User entry prompts | Bootstrap and work-mode prompts | `INIT_PROMPT.md` |
-| Runtime state | Current active task and ephemeral state | `memory-bank/runtime/` |
-| Mid-term plans | Multi-session, multi-task plans bridging vision and execution | `memory-bank/knowledge/plans/` |
-| Operational logs | Progress sessions and changelog | `memory-bank/logs/` |
-| Knowledge bundle | Long-lived OKF-compatible knowledge | `memory-bank/knowledge/` |
-| RFC docs | Paradigma proposals and design drafts | `docs/rfc/` |
-| Template source | Blank templates for derived projects | `memory-bank-template/` |
-| Deterministic tools | Lint and index utilities | `.paradigma/tools/` |
+| Web entry | FastAPI app、路由挂载、Auth 中间件 | `app/main.py`、`app/web/middleware.py` |
+| Worker entry | APScheduler 进程、心跳持久化 | `app/worker.py`、`app/jobs/scheduler.py` |
+| Domain | 平台无关接口与纯算法（年龄桶、速度、BreakoutRatio、来源置信度） | `app/domain/` |
+| Adapters | YouTube / TikTok / 字幕 / LLM 平台隔离 | `app/adapters/{youtube,tiktok,transcript,llm}/` |
+| Services | 采集、快照、基准、聚类、评分、生命周期、语义分析、候选生成、简报导出、运维状态 | `app/services/` |
+| Repositories | 数据访问层（async session） | `app/repositories/` |
+| Models | 18 张表的 ORM 定义与枚举 | `app/models.py` |
+| Jobs | 定时任务（crawl / trend / transcript / semantic / tiktok / ops）+ 互斥 | `app/jobs/` |
+| Web UI | SSR 路由 + Jinja 模板（五页业务界面） | `app/web/routes/`、`app/web/templates/` |
+| Runtime config | scoring / llm / tiktok / prompts / 实体词典 | `config/` |
+| Migrations | Alembic 版本链 | `migrations/versions/` |
+| Shadow scripts | Stage 1 影子验证管道与 golden dataset | `scripts/shadow/`、`data/shadow/` |
+| Ops scripts | 备份 / 恢复 / 磁盘监控 / 索引优化 | `scripts/`、`OPS.md`、`RECOVERY.md` |
+| Memory-Bank harness | Agent 记忆与确定性校验工具 | `memory-bank/`、`.paradigma/tools/` |
+
+依赖方向：`web / jobs → services → domain`，`services → repositories → models`，`services → adapters`。领域层不得 import 适配器或 SDK。
 
 # Data Flow
 
 ```mermaid
 flowchart TD
-    userRequest["User Request"] --> activeTask["runtime/active-task.md"]
-    activeTask --> planContext{"plan exists?"}
-    planContext -->|yes| plans["knowledge/plans/*.md"]
-    planContext -->|no| knowledgeIndex
-    plans --> knowledgeIndex["knowledge/index.md"]
-    activeTask --> knowledgeIndex
-    knowledgeIndex --> hotKnowledge["HOT Knowledge"]
-    knowledgeIndex --> routedDocs["Routed WARM/COLD Docs"]
-    routedDocs --> implementation["Implementation or Docs Update"]
-    implementation --> validation["pd-lint-okf.py"]
-    validation --> sessionLog["logs/progress session"]
-    validation --> knowledgeUpdate["knowledge update"]
+    watchlist["watch_items (Watchlist)"] --> crawl["Crawl jobs: YouTube adapter"]
+    crawl --> content["content_items + raw_payload"]
+    content --> snapshots["metric_snapshots (4h)"]
+    snapshots --> baselines["channel_baselines (median velocity)"]
+    baselines --> breakout["BreakoutRatio per video"]
+    breakout --> cluster["Rule-based clustering (anime entities)"]
+    cluster --> trends["trend_themes + trend_members"]
+    trends --> scoring["Composite score + lifecycle (01:30 UTC)"]
+    scoring --> semantic["LLM semantic analysis (02:00 UTC)"]
+    transcripts["transcripts (captions, 6h)"] --> semantic
+    semantic --> angles["creative_angles (evidence-validated)"]
+    angles --> candidates["daily_candidates (~30/day)"]
+    candidates --> review["Manager review UI (/candidates)"]
+    review --> brief["briefs + brief_items"]
+    brief --> export["Markdown / HTML export"]
 ```
+
+TikTok 实验数据在启用时经 `TikTokIngestionService` 进入 `content_items`，标记 `source_confidence: low`，失败不影响主流程。
 
 # Key Constraints
 
-- `memory-bank/knowledge/` 和 `docs/rfc/` 中的 concept 文档必须保持 OKF 基本合规。
-- `memory-bank/runtime/` 不进入 OKF knowledge bundle，避免短生命周期状态污染长期知识。
-- `memory-bank/knowledge/plans/` 中的计划文档按状态切换温度：`in-progress` → WARM，`completed` → COLD。
-- `memory-bank/logs/` 以追加为主，不替代 decisions、known issues 或 contracts。
-- `index.md` 的 generated block 只能由工具更新，Agent 不应手工编辑 generated block。
-- 修改协议源头时必须同步 Cursor rule、README、INIT_PROMPT 和模板目录。
+- LLM 不参与数值计算、评分或原始数据修改；所有 LLM 结论必须携带存在于 trend members 中的证据视频 ID。
+- 所有算法阈值与权重集中在 `config/scoring.yaml`，服务代码不得硬编码常量。
+- 适配器隔离：YouTube 与 TikTok 不共享平台逻辑；TikTok 默认关闭（`TIKTOK_ENABLED=false`），失败被隔离在独立任务与重试循环中。
+- 幂等写入：`content_items` 唯一约束 `(platform, external_id)`；快照唯一约束 `(content_item_id, captured_at_bucket)`（小时桶）。
+- 趋势主题跨日复用同一 ID（按 entity / canonical name 匹配），不得每日重建。
+- 任务互斥：进程内锁 + PostgreSQL advisory lock + DB running-batch 检查，防止重复运行。
+- 密钥只存在于 `.env`（gitignored）；TikTok cookie 不得写入日志。
+- `memory-bank/runtime/` 不进入 OKF knowledge bundle；`knowledge/` 与 `docs/rfc/` 的 concept 文档必须通过 strict lint。
 
 # Open Questions
 
-## 协议与运行时
-
-- **Session 间上下文断裂**：active-task 完成后归档，缺少 handoff 摘要和 task queue 追踪机制。下一个会话的 Agent 只能靠扫描 progress logs 推测上下文。详见 `known-issues/session-context-fragmentation.md`。方案 A（handoff.md）推荐在 v0.5.x 实现。
-- **单 Agent 假设**：active-task 是单焦点、单文件。多 Agent 并行工作时没有冲突解决协议，没有 task slot 分配机制。
-- **任务中断（Suspend）**：active-task 只有"进行中"和"完成"两个状态。用户暂停一个任务时没有正式的 suspend 协议，只能标记 completed（不诚实）或保留原样（污染下次会话）。
-- **Read Phase 无分级**：当前 Read Phase 强制读取 active-task + index + 4 个 HOT 文档。即使是修复一个 typo 也需要完整上下文。缺少 "快速路径"（最小读取集 vs 完整读取集）。
-- **协议自身无版本号**：`AGENT_RULES.md` 没有版本标识。衍生项目无法区分"这次更新只需要新工具"还是"协议变了必须重读 AGENT_RULES.md"。
-
-## 工具链
-
-- **pd-diagnose 无执行器**：能检测差距，但不能应用更新。`pd-update.py --apply` 推迟到 v0.6.0。
-- **知识新鲜度检查**：lint 检查格式正确性，不检查内容是否过时。没有类似 "doc-gardening agent" 的机制自动检测知识腐烂（如 `domains/auth.md` 声称用 bcrypt 但代码已切换到 argon2）。
-- **跨文档一致性检查**：`pd-check-links.py` 只检查链接是否存在，不检查内容一致性（如两个文档声明了冲突的约束）。
-- **Template Diff**：当上游模板更新时，已激活的衍生项目中对应文件无法感知变化。没有模板版本对比机制。
-- **知识文档删除/废弃协议**：frontmatter 有 `epistemic_status: deprecated`，但没有配套工具（自动排除索引、列出受影响文档）。
-- **Git 感知**：`pd-archive-task.py` 和 `pd-compact-progress.py` 不感知 git 状态，在未 commit 修改上运行可能导致数据丢失。
-
-## 语义与知识模型
-
-- **温度模型完全静态**：文件温度在 frontmatter 中硬编码。一个文档 3 个月未被 Agent 读取仍是 WARM，一个频繁出现的 known-issue 仍是 COLD。缺少基于时间的温度衰减规则。
-- **Type 层级缺失**：类型之间是扁平的。`paradigma-contract` 的 `contract_kind` 是 free-form，工具不会按 kind 做子分组。
-- **Relations 只建模静态关系**：缺少 transient depends_on（"仅当 plan X 是 in-progress 时才生效"）、conditional constrains（"如果 PG 则约束 A，如果 Mongo 则约束 B"）、causal relations。
-- **知识文档无版本号**：每个文档有 timestamp，但无 per-document version。Agent 无法快速判断"这个文档自上次我读以来变了吗"。
-- **Schema 格式**：当前 YAML schema 是轻量说明型。是否升级为可执行 JSON Schema / YAML Schema。
-- **RFC 自动索引**：是否在 `docs/rfc/` 也生成自动索引，与 `knowledge/` 的索引机制保持一致。
-- **CI 集成**：是否添加 CI wiring 以在 PR/merge 前自动运行 strict lint + link check + index check 序列。
-
-## 用户体验
-
-- **Bootstrap 体验断层**：模式 A 要求用户在首次会话中一次性填充 5+ 个文档。缺少渐进式填充路径和"快速启动"最小模式。
-- **无学习路径**：文档对新手密集。缺少按用户角色（纯后端 / 全栈 / 模板维护者）组织的阅读路线。
-- **无分支/实验协议**：探索性工作（"试试方案 A vs 方案 B"）没有 knowledge fork 机制。探索中产生的临时文档会直接污染 knowledge bundle。
-- **衍生项目兼容性矩阵**：从旧版 Paradigma 升级时，哪些变更是 breaking 需要明确。当前完全依赖文档描述。
+- **CI 覆盖缺口**：`.github/workflows/check.yml` 只在 Python 3.11 上运行 memory-bank 校验，未运行应用 pytest（应用要求 ≥3.12），也未验证 Alembic 迁移。
+- **聚类第二 / 三层未实现**：MVP 只有规则聚类（`config/anime_entities.yaml`）；文本向量召回与 LLM 歧义裁决仍是设计目标（见 mvp-plan 第 9 节）。
+- **冷启动基准**：系统上线前 2—4 周只有低置信度估算基准，见 known-issue。
+- **影子验证误报**：Hindi / manhwa 内容触发高共振误报，语言过滤与 manager-value 惩罚待校准，见 known-issue。
+- **团队账号反馈闭环**：`published_views/likes/comments` 字段已预留但未接入自有 YouTube 账号数据。
+- **初始迁移策略**：initial revision 使用 `Base.metadata.create_all`，后续 schema 变更需改为显式 op 脚本。
+- **单管理者假设**：认证是单密码 + 签名 session cookie；多用户 / RBAC 是明确的 post-MVP 项。
 
 # Citations
 
-- [OKF v0.1 Draft](https://raw.githubusercontent.com/GoogleCloudPlatform/knowledge-catalog/main/okf/SPEC.md)
-- [Paradigma OKF-Compatible Runtime RFC](../../docs/rfc/paradigma-okf-compatible-runtime.md)
+- [MVP Plan](plans/mvp-plan.md)
+- [Operations Manual](../../OPS.md)
+- [Recovery Guide](../../RECOVERY.md)

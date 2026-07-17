@@ -1,9 +1,11 @@
 # Progress Index
 
-- [2026-07-04 OKF Migration](2026-07-04-okf-migration.md)
-- [2026-07-04 OKF Iteration](2026-07-04-okf-iteration.md)
-- [2026-07-04 OKF Hardening](2026-07-04-okf-hardening.md)
-- [2026-07-05 Knowledge Review](2026-07-05-knowledge-review.md)
-- [2026-07-05 Rename Manuals and Config-Driven Index](2026-07-05-rename-and-config-index.md)
-- [2026-07-05 Code Block Fix and CI](2026-07-05-tooling-fix-and-ci.md)
-- [2026-07-05 Protocol Sync](2026-07-05-protocol-sync.md)
+- [2026-07-17 Stage 0 — Engineering Baseline](2026-07-17-stage-0-baseline.md)
+- [2026-07-17 Stage 1 — Shadow Validation & Golden Dataset](2026-07-17-stage-1-shadow-validation.md)
+- [2026-07-17 Stage 2 — Watchlist & YouTube Stable Collection](2026-07-17-stage-2-watchlist-youtube.md)
+- [2026-07-17 Stage 3 — Snapshots, Baselines & Trend Scoring](2026-07-17-stage-3-trend-scoring.md)
+- [2026-07-17 Stage 4 — Subtitle & LLM Semantic Analysis](2026-07-17-stage-4-semantic-analysis.md)
+- [2026-07-17 Stage 5 — Admin Backend & Brief Export（含 Stage 6 状态机）](2026-07-17-stage-5-admin-backend.md)
+- [2026-07-17 Stage 7 — TikTok Experiment Adapter](2026-07-17-stage-7-tiktok-adapter.md)
+- [2026-07-17 Stage 8 — Deployment, Stability & Ops](2026-07-17-stage-8-deployment-ops.md)
+- [2026-07-17 Memory-Bank Overhaul](2026-07-17-memory-bank-overhaul.md)

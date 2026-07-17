@@ -1,163 +1,117 @@
 ---
 type: paradigma-convention
 title: Coding and Collaboration Conventions
-description: Coding, naming, testing, documentation, versioning, and prohibited patterns for Project Paradigma.
-tags: [conventions, semver, collaboration, tooling]
-timestamp: 2026-07-04T22:50:00+08:00
+description: Coding, naming, testing, documentation, and versioning conventions for the Desiderium application and its memory-bank.
+tags: [conventions, python, testing, versioning, memory-bank]
+timestamp: 2026-07-17T09:09:00+08:00
 paradigma:
   schema_version: "0.1"
   temperature: hot
-  lifecycle: stable
+  lifecycle: evolving
   update_policy: requires-human-confirmation
   epistemic_status: confirmed
   retrieval_hints:
     zh:
       - 代码规范
+      - 测试规范
       - 版本规则
       - 文档约定
-      - 工具校验
     en:
       - coding conventions
+      - testing
       - versioning
       - documentation
-      - tooling
   symbols:
     - SemVer
     - VERSION
-    - Update Phase
+    - pytest
+    - config/scoring.yaml
   relations:
     constrains:
       - /contracts/repository-contract.md
-      - /manuals/paradigma-baseline-test.md
 ---
 
 # Naming
 
 | Target | Rule | Example |
 |--------|------|---------|
-| Files and directories | kebab-case, except established tool names | `pd-lint-okf.py`, `memory-bank` |
-| Python functions/variables | snake_case | `parse_frontmatter` |
-| Python classes | PascalCase | `LintIssue` |
-| Constants | UPPER_SNAKE_CASE | `RESERVED_FILENAMES` |
-| Markdown concept type | stable kebab-like string | `paradigma-contract` |
+| Python modules / packages | snake_case | `trend_discovery.py`, `app/repositories/` |
+| Python functions / variables | snake_case | `refresh_channel_baselines` |
+| Python classes | PascalCase | `WatchlistService`, `TrendTheme` |
+| Constants | UPPER_SNAKE_CASE | `EXEMPT_PREFIXES` |
+| DB tables / columns | snake_case（复数表名） | `metric_snapshots`, `captured_at_bucket` |
+| Enums | PascalCase 类 + 小写值 | `WatchTier.PRIORITY = "priority"` |
+| Config / docs files | kebab-case 或既有约定 | `anime_entities.yaml`, `web-api-contract.md` |
+| Env vars | UPPER_SNAKE_CASE | `YOUTUBE_DAILY_QUOTA_LIMIT` |
 
-Avoid pinyin, ambiguous abbreviations, and generic names such as `data`, `info`, or `temp` unless scoped to a tiny local context.
+避免拼音、模糊缩写和 `data` / `info` / `temp` 之类的泛型名。
 
 # Code Style
 
-- Prefer standard-library Python for Paradigma MVP tools.
-- Keep tools single-purpose: lint, link check, index sync, hot-size check, archive, compact.
-- Keep parsing conservative and deterministic. Do not rely on LLM interpretation for generated indexes or validation results.
-- Avoid premature abstractions until duplicated logic proves stable across at least three tools.
-- Use comments only when they explain why a rule exists or why a parser is intentionally limited.
+- Python ≥ 3.12，全面使用 `from __future__ import annotations` 与内建泛型标注。
+- 数据访问统一走 `app/repositories/`（async `AsyncSession`）；业务逻辑在 `app/services/`；纯算法在 `app/domain/`（无 I/O、可单测）。
+- 平台细节只允许出现在 `app/adapters/<platform>/`；领域与服务层不得 import 平台 SDK 或页面选择器。
+- 算法阈值、权重、调度间隔一律来自 `config/*.yaml` 或 `Settings`，禁止在服务 / SQL / 模板中硬编码。
+- 结构化 JSON 日志（`app/logging_config.py`），`extra` 中带 `service` / `component`；密钥与 cookie 不得进入日志。
+- 注释只解释"为什么"（规则来源、解析器的刻意限制），不复述代码行为。
 
 # Error Handling
 
-- Tool failures should use non-zero exit codes when they produce ERROR-level findings.
-- WARNING-level findings should be visible but should not fail `warn` mode.
-- CLI output should include repository-relative paths.
-- Generated files should be updated only when the user passes an explicit write flag or archive/compact command.
+- 外部 API 调用（YouTube / TikTok / LLM）必须有超时、指数退避与错误分类；配额耗尽时跳过低优先级任务而不是抛出。
+- 采集任务失败记录到 `crawl_jobs`（error_code / error_message / retry_count），由重试任务收敛，单项失败不得中断批次。
+- LLM / TikTok 失败必须被隔离：趋势评分与 YouTube 简报不受影响。
+- Web 层：`/health/ready` 与 `/health` 在依赖不可用时返回 503；业务路由的表单错误渲染回页面而不是 500。
+- 运维脚本（backup / restore / disk monitor）用非零退出码表达失败，供 cron 或告警钩子消费。
 
 # Testing Conventions
 
-- Run `python .paradigma/tools/pd-check-all.py` after knowledge/RFC edits (aggregates lint, links, index, hot-size).
-- Run `python .paradigma/tools/pd-sync-index.py --write` after adding/removing concept documents.
-- Run `python .paradigma/tools/pd-check-hot-size.py` before ending substantial sessions.
-- Compile Python tools with `python -m py_compile` when tool code changes, then remove or ignore `__pycache__` outputs.
+- `python -m pytest -q` 必须全绿后才能结束会话；新服务 / 纯算法必须带 `tests/unit/` 测试。
+- 单测不调用真实外部 API：适配器测试使用保存的响应样本或 fake client。
+- 评分权重、趋势门槛、聚类规则、prompt、去重阈值变更时，应在 golden dataset（`data/shadow/golden_dataset.csv`）上回放对比。
+- Memory-bank / RFC 文档编辑后运行 `python .paradigma/tools/pd-check-all.py`；新增或删除 concept 文档后运行 `python .paradigma/tools/pd-sync-index.py --write`。
 
 # Documentation Conventions
 
-- `AGENT_RULES.md` is the source of truth for Agent protocol.
-- `.cursor/rules/memory-bank-protocol.mdc` is a synchronized Cursor adapter.
-- `README.md` explains user-facing setup and maintenance workflows.
-- `INIT_PROMPT.md` contains copyable conversation starters.
-- `docs/rfc/*.md` stores proposal documents and must remain OKF-compatible.
-- Long-lived knowledge belongs in `memory-bank/knowledge/`; runtime state belongs in `memory-bank/runtime/`; process logs belong in `memory-bank/logs/`.
+- 长期知识在 `memory-bank/knowledge/`（OKF frontmatter + strict lint）；运行状态在 `memory-bank/runtime/`；会话日志在 `memory-bank/logs/`。
+- 运维操作手册的 canonical 版本是仓库根目录 `OPS.md` / `RECOVERY.md`；`knowledge/manuals/` 中的对应文档是 OKF 包装层，链接而非复制。
+- `AGENT_RULES.md` 是 Agent 协议源头，`.cursor/rules/memory-bank-protocol.mdc` 是同步的 Cursor 适配器。
+- 写入日志、ADR、active-task 前先用 Shell 获取时间戳（PowerShell: `Get-Date -Format "yyyy-MM-dd HH:mm"`）。
 
 ## Versioning
 
-Project Paradigma follows SemVer using the root `VERSION` file as the source of truth.
+应用与 harness 双轨版本：
+
+- **应用版本**：根 `VERSION` 文件为唯一真源，SemVer；`pyproject.toml` 与 changelog 保持一致。
+- **Paradigma harness 版本**：`.paradigma/config.yaml` 的 `paradigma_harness_version`，仅在从上游同步 harness 时更新。
 
 | Change type | Version action |
 |-------------|----------------|
-| Typo or wording only | May skip version bump |
-| Template path, protocol, or tooling behavior change | PATCH or MINOR depending on scope |
-| New workflow/tooling capability | MINOR |
-| Breaking protocol/path change for derived projects | MAJOR proposal, requires user confirmation |
+| Typo / 文案 | 可跳过 bump |
+| Bug 修复、文档体系重构 | PATCH |
+| 新功能域 / 新任务 / 新契约能力 | MINOR |
+| API / DB schema 破坏性变更 | MAJOR 提案，需用户确认 |
 
-When bumping versions, update:
-
-1. `VERSION`
-2. `memory-bank/logs/changelog.md`
-3. A progress session in `memory-bank/logs/progress/`
-4. ADR when the change is architectural
+Bump 时同步更新：`VERSION`、`pyproject.toml`、`memory-bank/logs/changelog.md`、一条 progress session log。
 
 ## Document Size Limits
 
-HOT 文档（`project-brief.md`、`architecture.md`、`conventions.md`、`repository-contract.md`）每次会话都会被完整读入 Agent 上下文。为控制 token 消耗，应遵守以下阈值：
+HOT 文档每次会话都会被完整读入 Agent 上下文：
 
 | 文档类型 | WARN | ERROR | 超出后操作 |
 |----------|------|-------|-----------|
-| HOT knowledge 文档 | 260 行 | 420 行 | 拆分 |
+| HOT knowledge 文档 | 260 行 | 420 行 | 拆分（细节移入 domains/ 或 contracts/ 子文件） |
 | `active-task.md` | 160 行 | 260 行 | 归档 |
 | Progress index | 160 行 | 260 行 | 压缩 |
 
-### architecture.md 拆分策略
-
-当 `architecture.md` 超过 260 行时，按模块拆分为核心 + 细节：
-
-```text
-architecture.md                   ← HOT, 核心骨架 (~100–150 行)
-  保留: Overview, Technology Stack, Module Boundaries, Key Constraints,
-        Open Questions, Citations
-  移出: 每模块的技术选型理由、数据流细节、trade-off 讨论
-
-domains/architecture/             ← WARM, 模块级架构细节
-├── payment-architecture.md
-├── auth-architecture.md
-└── frontend-architecture.md
-```
-
-拆分后，`architecture.md` 的 Module Boundaries 表应包含指向细节文档的路径：
-
-```markdown
-| Module | Responsibility | Architecture Detail |
-|--------|----------------|---------------------|
-| Payment | 支付回调与订单生命周期 | domains/architecture/payment-architecture.md |
-```
-
-### contracts/ 拆分策略
-
-当单个 `paradigma-contract` 文档超过 200 行时，按 `contract_kind` 拆分为独立业务域文件：
-
-```text
-contracts/
-├── index.md                     ← auto-generated
-├── repository-contract.md       ← HOT, Paradigma 专用
-├── api/                         ← contract_kind: api
-│   ├── payment-api.md
-│   └── auth-api.md
-├── database/                    ← contract_kind: database
-│   ├── user-schema.md
-│   └── order-schema.md
-└── events/                      ← contract_kind: event
-    └── order-events.md
-```
-
-每个拆分文件保持独立的 OKF frontmatter（独立的 hints/symbols/relations），让 Agent 通过 index 精确路由到相关 contract，避免一次性加载所有 contract。
-
-### 拆分原则
-
-- **按业务域拆分**：同一业务域的 API + DB + Events 放在不同子目录。
-- **保持独立可读性**：每个拆分文件应包含完整的 context（Scope / Contract / Schema / Compatibility），Agent 不需要读原文件即可理解。
-- **temperature 差异化**：频繁变动的 contract 设为 `warm`，基础设施级 contract 保留 `hot`。
-- **拆分后更新 relations**：拆分出的子文件应在 `depends_on` 中引用 `architecture.md`，原文件涉及的跨文档关系应在子文件中重新声明。
+单个 contract 超过 200 行时按 `contract_kind` 拆分为独立文件，每个文件保留完整 frontmatter 与独立可读的上下文。
 
 # Prohibited Patterns
 
-- Do not write long-lived facts into `memory-bank/runtime/active-task.md`.
-- Do not manually edit generated index blocks.
-- Do not add new concept documents without OKF frontmatter.
-- Do not change contracts, architecture, or accepted ADRs without checking update policy.
-- Do not keep legacy flat Memory-Bank paths in active protocol docs.
-- Do not introduce external dependencies into tooling without explicit justification.
+- 不在 `memory-bank/runtime/active-task.md` 写长期事实。
+- 不手工编辑 generated index block（由 `pd-sync-index.py --write` 维护）。
+- 不新增缺少 OKF frontmatter 的 concept 文档。
+- 不在未检查 update policy 的情况下修改 contracts、architecture 或已接受的 ADR。
+- 不在服务层硬编码评分常量或调度间隔。
+- 不让 LLM 计算指标、生成无证据结论或修改原始数据。
+- 不把密钥、cookie 写入代码、日志或 git（`.env` only）。
+- 不在领域层（`app/domain/`）引入 I/O 或平台依赖。

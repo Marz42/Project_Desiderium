@@ -147,7 +147,7 @@
 ———— Phase 1：发现阶段 ————
 
 1. 读取 memory-bank/runtime/active-task.md、memory-bank/knowledge/index.md 和 HOT knowledge。
-2. 读取 memory-bank/knowledge/domains/design-system.md，理解 DESIGN.md 在 Paradigma 中的角色和格式要求。
+2. 读取 memory-bank-template/DESIGN.md 模板，理解 DESIGN.md 的角色和格式要求。
 3. 根据我的项目类型和风格偏好，用 2-3 句话归纳你的设计理念理解，让我确认方向后再继续。
 4. 如果我有参考品牌，简要分析它们的视觉特征（配色倾向、字体风格、空间感）。
 

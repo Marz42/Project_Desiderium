@@ -1,3 +1,66 @@
+---
+type: paradigma-plan
+title: Desiderium MVP Plan
+description: Full MVP product specification and staged development plan for the anime trend intelligence system (Stages 0-8, completed).
+tags: [plan, mvp, specification, stages]
+timestamp: 2026-07-17T09:09:00+08:00
+paradigma:
+  schema_version: "0.1"
+  temperature: cold
+  lifecycle: stable
+  update_policy: requires-human-confirmation
+  epistemic_status: confirmed
+  status: completed
+  retrieval_hints:
+    zh:
+      - MVP 计划
+      - 产品规格
+      - 分阶段开发
+      - 验收标准
+    en:
+      - mvp plan
+      - product specification
+      - staged development
+      - acceptance criteria
+  symbols:
+    - TrendScore
+    - BreakoutRatio
+    - watch_items
+  relations:
+    related_to:
+      - /project-brief.md
+      - /architecture.md
+---
+
+# Goal
+
+将每日 1—3 小时的无标准选题搜索压缩到 30—60 分钟：系统每日采集监控列表、计算跨频道共振与相对表现异常、生成约 30 个候选创作方向，由管理者审核并导出简报。
+
+# Scope
+
+MVP 覆盖 17 个功能域（监控列表、YouTube 采集、快照、基准、聚类、评分、LLM 语义、管理后台、状态机、TikTok 实验、部署运维）；明确排除多角色权限、自动脚本生成、画面理解、自动发布等（详见下文第 2 节）。
+
+# Approach
+
+分阶段推进：Stage 0 工程基线 → 1 影子验证 → 2 稳定采集 → 3 趋势算法 → 4 LLM 语义层 → 5 管理后台 → 6 历史反馈 → 8 部署加固 → 7 TikTok 实验。先用真实数据验证评分算法（golden dataset），再建设完整后台；确定性规则优先，LLM 只做语义。
+
+# Tasks
+
+- [x] Stage 0 工程基线（FastAPI + PG + Alembic + Docker + 全数据模型）
+- [x] Stage 1 影子验证与黄金数据集（Precision@15 60%，高价值召回 100%）
+- [x] Stage 2 Watchlist 与 YouTube 稳定采集
+- [x] Stage 3 快照、基准与趋势评分
+- [x] Stage 4 字幕分层获取与 LLM 语义分析
+- [x] Stage 5 管理后台与简报导出（Stage 6 状态机并入本阶段交付）
+- [x] Stage 7 TikTok 实验适配器
+- [x] Stage 8 部署、稳定性与运营准备
+
+# Status
+
+**completed** — Stage 0–8 全部交付（2026-07-17）。未实现的设计目标（聚类第二/三层、团队账号反馈）记录在 `architecture.md` Open Questions。以下为原始完整规格，作为验收与回归的参考基准保留。
+
+---
+
 # 番剧解说趋势情报系统
 
 ## MVP分阶段开发计划

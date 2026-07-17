@@ -12,7 +12,7 @@ alwaysApply: true
 - `memory-bank/runtime/`：当前运行状态，不作为 OKF knowledge 导出。
 - `memory-bank/logs/`：会话日志和版本日志。
 - `memory-bank/knowledge/`：长期知识库，非 `index.md` / `log.md` 文档必须有 YAML frontmatter、非空 `type`，并通过 strict OKF lint。
-- `docs/rfc/`：Paradigma 自身 RFC 文档区，也按 OKF concept 文档维护。
+- `docs/rfc/`：本项目的提案/RFC 文档区，也按 OKF concept 文档维护。
 - `memory-bank-template/`：空白模板源。
 
 ## Read Phase
@@ -27,7 +27,7 @@ alwaysApply: true
    - `memory-bank/knowledge/conventions.md`
    - `memory-bank/knowledge/contracts/repository-contract.md`
 4. 根据任务从 index 选择最相关的 WARM/COLD 文档。
-5. 若任务涉及前端/UI 且项目存在 `DESIGN.md`，将其和 `domains/design-system.md` 加入读取列表。
+5. 若任务涉及前端/UI 且项目存在 `DESIGN.md`，将其加入读取列表。
 6. 必要时根据 relations 补读依赖。
 
 ## WARM / COLD

@@ -2,17 +2,14 @@
 
 Recorded issues and their resolution status.
 
-* [f-string backslash escape in pd-compact-progress.py](fstring-escape-in-compact.md) - Syntax error from backslash inside f-string expression.
-* [Stale section structure in ADR-001 and manuals](stale-section-structure-in-adr001.md) - Section headings did not match expanded schema registry.
-
 <!-- BEGIN PARADIGMA AUTO-INDEX -->
-<!-- checksum: 2e36f0af1d82edc7 -->
+<!-- checksum: 00a9008a7d32aa6e -->
 <!-- generated_by: pd-sync-index.py -->
 
 | Path | Type | Title | Hints | Symbols | Relations |
 |------|------|-------|-------|---------|-----------|
-| [fstring-escape-in-compact.md](fstring-escape-in-compact.md) | `paradigma-known-issue` | f-string backslash escape in pd-compact-progress.py | f-string<br>转义<br>语法错误 ... | - | related_to:/domains/tooling.md |
-| [session-context-fragmentation.md](session-context-fragmentation.md) | `paradigma-known-issue` | Session Context Fragmentation Between Active Tasks | 会话上下文断裂<br>任务切换<br>handoff ... | - | related_to:/domains/protocol.md<br>related_to:/domains/plans.md<br>related_to:/decisions/adr-002-okf-compatible-memory-runtime.md |
-| [stale-section-structure-in-adr001.md](stale-section-structure-in-adr001.md) | `paradigma-known-issue` | Stale section structure in ADR-001 and manuals after OKF hardening | schema registry<br>section<br>结构 ... | - | related_to:/decisions/adr-003-strict-okf-production-rules.md<br>related_to:/domains/tooling.md |
+| [api-key-leak-in-shadow-cache.md](api-key-leak-in-shadow-cache.md) | `paradigma-known-issue` | API Keys Leaked into Shadow Data Cache | 密钥泄漏<br>事故记录<br>影子缓存 ... | - | related_to:/domains/watchlist-ingestion.md |
+| [cold-start-baseline-confidence.md](cold-start-baseline-confidence.md) | `paradigma-known-issue` | Cold-start Channel Baselines Have Low Confidence | 冷启动<br>基准置信度<br>快照积累 ... | - | related_to:/domains/trend-engine.md |
+| [shadow-validation-false-positives.md](shadow-validation-false-positives.md) | `paradigma-known-issue` | Hindi and Manhwa High-resonance False Positives in Trend Ranking | 误报<br>语言过滤<br>影子验证 ... | - | related_to:/domains/trend-engine.md |
 
 <!-- END PARADIGMA AUTO-INDEX -->

@@ -1,9 +1,9 @@
 ---
 type: paradigma-rfc-index
 title: RFC Index
-description: Index of Paradigma RFC documents for proposals, design drafts, and architectural explorations.
+description: Index of Desiderium RFC documents for proposals, design drafts, and architectural explorations.
 tags: [rfc, index]
-timestamp: 2026-07-05T11:45:00+08:00
+timestamp: 2026-07-17T09:09:00+08:00
 paradigma:
   schema_version: "0.1"
   temperature: warm
@@ -19,21 +19,16 @@ paradigma:
       - RFC
       - proposals
       - design drafts
-  relations:
-    related_to:
-      - ../../memory-bank/knowledge/architecture.md
-      - ../../memory-bank/knowledge/contracts/repository-contract.md
 ---
 # RFC Index
 
-* [Paradigma OKF-Compatible Agent Memory Runtime](paradigma-okf-compatible-runtime.md) - Proposal for evolving Project Paradigma into an OKF-compatible Agent Memory Runtime framework.
+暂无 RFC。新的架构提案与设计草案按 OKF concept 文档格式放入本目录。
 
 <!-- BEGIN PARADIGMA AUTO-INDEX -->
-<!-- checksum: 79fef8508d90e3c2 -->
+<!-- checksum: 5d8248578ade2e93 -->
 <!-- generated_by: pd-sync-index.py -->
 
 | Path | Type | Title | Hints | Symbols | Relations |
 |------|------|-------|-------|---------|-----------|
-| [paradigma-okf-compatible-runtime.md](paradigma-okf-compatible-runtime.md) | `paradigma-rfc` | Paradigma OKF-Compatible Agent Memory Runtime | OKF 兼容运行时<br>Agent Memory Runtime<br>工具闭环 ... | OKF-compatible Agent Memory Runtime<br>L1 Format Layer<br>L2 Semantic Layer ... | informs:../../memory-bank/knowledge/architecture.md<br>informs:../../memory-bank/knowledge/contracts/repository-contract.md |
 
 <!-- END PARADIGMA AUTO-INDEX -->

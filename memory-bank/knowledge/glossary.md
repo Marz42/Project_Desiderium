@@ -1,9 +1,9 @@
 ---
 type: paradigma-glossary
 title: Project Glossary
-description: Glossary of project-specific terms and abbreviations.
-tags: [glossary, terminology]
-timestamp: 2026-07-05T11:45:00+08:00
+description: Core terms for the Desiderium anime trend intelligence system and its memory-bank.
+tags: [glossary, terms, trends]
+timestamp: 2026-07-17T09:09:00+08:00
 paradigma:
   schema_version: "0.1"
   temperature: cold
@@ -14,14 +14,11 @@ paradigma:
     zh:
       - 术语
       - 缩写
-      - OKF
+      - 业务概念
     en:
-      - glossary
+      - terms
       - abbreviations
-      - OKF
-  symbols:
-    - OKF
-    - Memory-Bank
+      - domain concepts
   relations:
     related_to:
       - /project-brief.md
@@ -29,44 +26,44 @@ paradigma:
 
 # Terms
 
-| Term | Meaning | Notes |
-|------|---------|-------|
-| OKF | Open Knowledge Format | Markdown + YAML frontmatter knowledge bundle format. |
-| Memory-Bank | External memory system used by Paradigma | Split into runtime, logs, and knowledge in the OKF iteration. |
-| Runtime | Ephemeral Agent state (`memory-bank/runtime/`) | Holds active-task; not exported as OKF knowledge. |
-| Logs | Operational logs (`memory-bank/logs/`) | Progress sessions, changelog, tool-generated summaries; append-first. |
-| Knowledge | Long-lived OKF-compatible concepts (`memory-bank/knowledge/`) | architecture, contracts, decisions, domains, manuals, known issues, glossary. |
-| HOT | Files read at every session start | active-task (runtime) + HOT knowledge (project-brief, architecture, conventions, repository-contract). |
-| WARM | Files read on-demand by task routing | domains, contracts, manuals, RFC docs. |
-| COLD | Files read for audits, archaeology, or disputes | decisions, known issues, glossary. |
-| Concept Document | OKF-compatible Markdown file under `knowledge/` or `docs/rfc/` | Must have YAML frontmatter with non-empty `type`. |
-| Paradigma Namespace | `paradigma:` block in frontmatter | Holds Paradigma-specific metadata (temperature, lifecycle, update_policy, epistemic_status, retrieval_hints, symbols, relations). |
-| Retrieval Hints | `paradigma.retrieval_hints` in frontmatter | zh/en keyword arrays that `pd-sync-index.py` uses to build route tables. |
-| Symbols | `paradigma.symbols` in frontmatter | Domain-specific identifiers (class names, endpoints, constants) for index routing. |
-| Epistemic Status | `paradigma.epistemic_status` field | One of: confirmed, decision, proposal, assumption, deprecated, unknown. |
-| Update Policy | `paradigma.update_policy` field | One of: agent-editable, requires-human-confirmation, append-only, generated, read-only. |
-| Generated Block | Section between `<!-- BEGIN PARADIGMA AUTO-INDEX -->` and `<!-- END PARADIGMA AUTO-INDEX -->` | Maintained by `pd-sync-index.py`; agents must not edit by hand. |
-| Session Log | Progress log under `logs/progress/` | Records one Agent session: goal, actions, files, decisions, follow-ups. |
-| ADR | Architecture Decision Record | Stored under `knowledge/decisions/`; append-only, accepted decisions constrain future work. |
-| Active Task | Current task state in `memory-bank/runtime/active-task.md` | Single focus; archived to session log on completion. |
-| DESIGN.md | 项目根目录的视觉设计规范文件 | 遵循 google-labs-code/design.md 格式，包含 colors/typography/spacing/components 等结构化设计 tokens。可选——无前端需求的项目无需创建。Agent 在涉及前端/UI 任务时将其作为 WARM 参考。 |
-| 设计器模式 | DESIGN.md 的 Agent 辅助创建流程 | 即 INIT_PROMPT 模式 G。通过问答形式引导用户定义视觉风格，Agent 逐段构建符合 design.md 规范的 DESIGN.md 文件。详见 `manuals/paradigma-design-wizard.md`。 |
-| Harness 诊断器 | Paradigma 版本差距检测工具 | 即 `pd-diagnose.py`。对比项目与上游 Paradigma 在结构、工具、Schema、配置、协议五个维度的差异，生成可操作的迁移建议。 |
-| 结构迁移 | pre-OKF flat 结构到 OKF 三态结构的升级过程 | 即 INIT_PROMPT 模式 H。由 Agent 主导：创建 runtime/logs/knowledge 目录，为知识文档添加 OKF frontmatter，拆分组合文件为独立 concept 文档。 |
-| 中期计划 (Plan) | 介于项目愿景和当前任务之间的多会话实施路径 | `paradigma-plan` 类型文档，存放于 `knowledge/plans/`。含 Goal、Scope、Approach、Tasks、Status。执行中为 WARM，完成后自动降为 COLD。 |
+| 术语 | 定义 |
+|------|------|
+| WatchItem | 统一监控项：频道 / 账号 / 关键词 / 动漫作品 / 榜单页面，带平台、等级、标签与抓取状态（`watch_items` 表） |
+| Tier（监控等级） | priority（重点，~5h 抓取）/ general（一般，~18h）/ experimental（实验，评分权重 0.5） |
+| ContentItem | 采集到的视频等原始内容，含 `raw_payload` 原始响应（`content_items` 表） |
+| Metric Snapshot | 视频指标时间序列快照，按小时桶去重；系统最重要的基础设施 |
+| 年龄桶（Age Bucket） | 视频发布时长分段：0–6h / 6–24h / 24–72h / 3–7d，表现比较只在同桶内进行 |
+| 播放速度（Velocity） | 观察窗口内新增播放 ÷ 窗口小时数；无历史快照时用冷启动估算 |
+| Channel Baseline | 频道在某年龄桶下最近约 20 条视频的播放速度中位数，带样本量置信度 |
+| BreakoutRatio | 视频速度 ÷ 频道同龄基准速度，截断上限 8；≥2 明显异常，≥4 强突破 |
+| 跨频道共振 | 多个不同频道短期内发布同一题材——趋势判定的第一权重（35%） |
+| TrendTheme | 趋势主题（作品 / 角色 / 篇章 / 事件），跨日复用同一 ID，带生命周期状态 |
+| Lifecycle Status | new / rising / stable / declining / reviving / dormant，由活动值增长比判定 |
+| TrendScore | 综合评分：共振 35% + 相对异常 25% + 动量 20% + 持续性 10% + 规模 5% + 新鲜度 5% |
+| CreativeAngle | 每日可执行的中文创作方向，带 format（short/long/both）与证据视频 ID |
+| Daily Candidate | 每日候选排序快照（约 30 个方向），保证历史可重现 |
+| Brief | 管理者审核后导出的简报（Markdown / HTML），按趋势分组 |
+| 状态机 | candidate → selected → adopted → published；分支 reusable / blocked；迁移有审计 |
+| Source Confidence | 数据来源置信度：YouTube high，TikTok 实验抓取 low |
+| Golden Dataset | Stage 1 影子验证产出的回归基线（真实视频 + 人工趋势标注） |
+| 影子验证（Shadow Validation） | 开发完整后台前用真实数据验证评分算法的阶段（Stage 1） |
+| Memory-Bank | 本仓库内嵌的 Agent 长期记忆结构（runtime / logs / knowledge 三态） |
+| HOT / WARM / COLD | 知识温度：每次会话必读 / 按任务路由 / 按需检索 |
 
 # Abbreviations
 
-| Abbreviation | Meaning |
-|--------------|---------|
-| RFC | Request for Comments |
-| OKF | Open Knowledge Format |
+| 缩写 | 全称 |
+|------|------|
 | ADR | Architecture Decision Record |
-| SemVer | Semantic Versioning |
+| ASR | Automatic Speech Recognition（可选转录后备） |
+| CSRF | Cross-Site Request Forgery（表单 + HTMX 头双通道 token） |
+| OKF | Open Knowledge Format（knowledge 文档的 frontmatter 标准） |
+| SSR | Server-Side Rendering（Jinja2 + HTMX） |
+| MVP | Minimum Viable Product（Stage 0–8 交付范围） |
 
 # Domain-specific Meanings
 
-| Term | Domain | Meaning |
-|------|--------|---------|
-| pd-* | Tooling | Paradigma deterministic tool prefix (e.g., `pd-lint-okf.py`). |
-| HOT/WARM/COLD | Memory-Bank | Temperature tiers for retrieval frequency, not directory location. |
+- **"热门破圈"**：不是绝对播放量高，而是"跨频道共振 × 相对频道基准表现异常"同时成立。
+- **"早期信号"**：24h 内 ≥2 频道 + 1 条 BreakoutRatio ≥ 4 + 额外佐证；比正式趋势门槛更敏感，单独标记。
+- **"证据"（Evidence）**：LLM 结论必须引用的 trend member 视频 ID；无证据的结论会被 `EvidenceValidator` 拒绝。
+- **"实验来源"**：TikTok 等不承诺稳定性的数据源；进入候选池但降低置信度，不得单独认定趋势。
