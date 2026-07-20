@@ -3,7 +3,7 @@ type: paradigma-runtime-state
 title: Active Task
 description: Current active task state for the Agent session.
 tags: [runtime, active-task]
-timestamp: 2026-07-17T14:32:00+08:00
+timestamp: 2026-07-20T17:18:00+08:00
 paradigma:
   layer: runtime
   temperature: hot
@@ -17,33 +17,31 @@ paradigma:
 
 ## Task ID
 
-2026-07-17-iteration-5-beta-observation
+2026-07-20-issue-hardening
 
 ## User Request
 
-实施 Iteration 5: Beta Observation and Calibration，先修复并发与幂等契约，再补 G3/G4 观察工具和测试。
+修复 error-report 中的 P0–P2 问题：CI migration check 清理、生产环境校验确认、API key 日志脱敏、集成测试 docker-compose 与 Makefile、离线迁移 head 校验脚本、P0-1 测试注释、active-task 归档。
 
 ## Current Status
 
-completed — 0.10.0 代码、迁移、测试与观察脚本已交付；真实 G3/G4 观察门仍待流量。2026-07-20：修复 angle status 单测 monkeypatch（`_build_adapter` 替代无效的 `get_settings` 桩）。
+completed — 所有 P0/P1/P2 修复已交付并通过全量 pytest。
 
 ## Checklist
 
-- [x] 发布 URL 唯一约束与 Brief finalize 原子不可变
-- [x] 成员决策优先级与快照式事务回滚
-- [x] Analysis Run / 历史快照 / 基准版本 / 重试退避
-- [x] G3/G4 回归与并发集成测试
-- [x] G3/G4 只读观察报告与数据集隔离
-- [x] Memory-Bank、0.10.0 与全量工程门
+- [x] P0-2: 移除 .github/workflows/check.yml 中的 `alembic check` advisory 步骤
+- [x] P2-2: 确认 app/services/config_validation.py 生产校验已存在（无需新增）
+- [x] P1-1: app/logging_config.py 新增 ApiKeyRedactFilter（AIzaSy... 脱敏）
+- [x] P1-2: 新增 docker-compose.test.yml + Makefile（集成测试本地运行）
+- [x] P1-3: 新增 scripts/check_migration_head.py（离线 head 校验，预期 a7b8c9d0e1f2）
+- [x] P0-1: tests/unit/test_angle_status.py 添加注释说明 monkeypatch 为测试隔离需要，非代码缺陷
+- [x] P2-3: 归档 active-task，写入新 active-task
+- [x] 全量 pytest 通过（152 passed, 8 skipped）
 
 ## Relevant Knowledge
 
-- `knowledge/plans/iteration-5-beta-observation.md`
-- `knowledge/plans/g3-g4-stabilization-plan.md`
-- `knowledge/decisions/adr-004-bounded-embedding-llm-clustering.md`
-- `knowledge/domains/trend-engine.md`
-- `knowledge/domains/admin-web.md`
 - `knowledge/contracts/data-model-contract.md`
+- `knowledge/conventions.md`
 
 ## Blockers
 
@@ -51,6 +49,4 @@ completed — 0.10.0 代码、迁移、测试与观察脚本已交付；真实 G
 
 ## Notes
 
-里程碑仍是 MVP Feature Complete / Beta Readiness: Not Ready，直到真实流量满足 G3 抽样与 G4 ≥14 天 / ≥20 条发布观察门。
-
-试运行操作手册已就绪：`knowledge/manuals/desiderium-beta-trial.md`（三阶段流程、基线冻结、停止条件、Beta Ready 判定）。下一步按阶段 1 影子运行启动。
+P2-1（git history 重写）由用户明确跳过。

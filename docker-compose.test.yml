@@ -1,0 +1,32 @@
+# Integration test environment.
+# Usage:
+#   docker compose -f docker-compose.test.yml up --abort-on-container-exit --exit-code-from test
+#
+# Or via the Makefile target:
+#   make test-integration
+services:
+  postgres-test:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: desiderium_test
+      POSTGRES_PASSWORD: desiderium_test
+      POSTGRES_DB: desiderium_test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U desiderium_test -d desiderium_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  test:
+    build: .
+    environment:
+      DATABASE_URL: postgresql+asyncpg://desiderium_test:desiderium_test@postgres-test:5432/desiderium_test
+      ENVIRONMENT: development
+      RUN_INTEGRATION_TESTS: "1"
+      LOG_LEVEL: WARNING
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    command: >
+      sh -c "alembic upgrade head && python -m pytest tests/integration -v --tb=short"

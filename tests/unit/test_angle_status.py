@@ -92,6 +92,10 @@ async def test_publish_with_non_youtube_url_raises_published_url_required() -> N
 async def test_publish_with_valid_youtube_url_creates_retryable_publication_record(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    # Monkeypatch is required here to isolate publication_metrics from the
+    # module-level get_settings() call that would otherwise read the real
+    # environment.  This is a test-isolation concern, not a code bug — the
+    # production path is covered by test_publish_api_failure_does_not_roll_back_angle_status.
     # No API key configured: enrichment must be a no-op, never raise, and
     # leave the record retryable (PENDING) rather than rolling back status.
     monkeypatch.setattr(

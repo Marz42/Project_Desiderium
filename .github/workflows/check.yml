@@ -74,9 +74,6 @@ jobs:
           alembic upgrade head
       - run: alembic downgrade base
       - run: alembic upgrade head
-      - name: Check model and migration drift (advisory)
-        continue-on-error: true
-        run: alembic check
 
   integration-tests:
     runs-on: ubuntu-latest
