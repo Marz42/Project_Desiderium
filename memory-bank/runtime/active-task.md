@@ -25,7 +25,7 @@ paradigma:
 
 ## Current Status
 
-completed — 0.10.0 代码、迁移、测试与观察脚本已交付；真实 G3/G4 观察门仍待流量。
+completed — 0.10.0 代码、迁移、测试与观察脚本已交付；真实 G3/G4 观察门仍待流量。2026-07-20：修复 angle status 单测 monkeypatch（`_build_adapter` 替代无效的 `get_settings` 桩）。
 
 ## Checklist
 

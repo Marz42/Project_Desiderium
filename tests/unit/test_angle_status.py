@@ -95,8 +95,8 @@ async def test_publish_with_valid_youtube_url_creates_retryable_publication_reco
     # No API key configured: enrichment must be a no-op, never raise, and
     # leave the record retryable (PENDING) rather than rolling back status.
     monkeypatch.setattr(
-        "app.services.publication_metrics.get_settings",
-        lambda: Settings(youtube_api_key=""),
+        "app.services.publication_metrics.PublicationMetricsService._build_adapter",
+        lambda self: None,
     )
     session = AsyncMock(spec=AsyncSession)
     session.scalar.side_effect = [None, None]
