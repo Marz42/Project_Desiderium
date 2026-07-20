@@ -3,7 +3,7 @@ type: paradigma-runtime-state
 title: Active Task
 description: Current active task state for the Agent session.
 tags: [runtime, active-task]
-timestamp: 2026-07-20T17:18:00+08:00
+timestamp: 2026-07-21T00:26:00+08:00
 paradigma:
   layer: runtime
   temperature: hot
@@ -17,31 +17,26 @@ paradigma:
 
 ## Task ID
 
-2026-07-20-issue-hardening
+2026-07-21-admin-status-test-auth
 
 ## User Request
 
-修复 error-report 中的 P0–P2 问题：CI migration check 清理、生产环境校验确认、API key 日志脱敏、集成测试 docker-compose 与 Makefile、离线迁移 head 校验脚本、P0-1 测试注释、active-task 归档。
+修复 `tests/unit/test_admin_status.py::test_admin_status_returns_dashboard`：因 AuthMiddleware 要求 session `authenticated`，测试收到 303 而非 200。为测试客户端设置签名 session cookie 后提交。
 
 ## Current Status
 
-completed — 所有 P0/P1/P2 修复已交付并通过全量 pytest。
+completed — 测试通过并已提交。
 
 ## Checklist
 
-- [x] P0-2: 移除 .github/workflows/check.yml 中的 `alembic check` advisory 步骤
-- [x] P2-2: 确认 app/services/config_validation.py 生产校验已存在（无需新增）
-- [x] P1-1: app/logging_config.py 新增 ApiKeyRedactFilter（AIzaSy... 脱敏）
-- [x] P1-2: 新增 docker-compose.test.yml + Makefile（集成测试本地运行）
-- [x] P1-3: 新增 scripts/check_migration_head.py（离线 head 校验，预期 a7b8c9d0e1f2）
-- [x] P0-1: tests/unit/test_angle_status.py 添加注释说明 monkeypatch 为测试隔离需要，非代码缺陷
-- [x] P2-3: 归档 active-task，写入新 active-task
-- [x] 全量 pytest 通过（152 passed, 8 skipped）
+- [x] 为 test client 设置 signed session cookie（`authenticated: True`）
+- [x] `pytest tests/unit/test_admin_status.py -v --tb=short` 通过
+- [x] git commit（仅测试修复；排除含 API key 的 fetch_meta 与 .git-rewrite）
 
 ## Relevant Knowledge
 
-- `knowledge/contracts/data-model-contract.md`
-- `knowledge/conventions.md`
+- `knowledge/contracts/web-api-contract.md`
+- `knowledge/domains/admin-web.md`
 
 ## Blockers
 
@@ -49,4 +44,4 @@ completed — 所有 P0/P1/P2 修复已交付并通过全量 pytest。
 
 ## Notes
 
-P2-1（git history 重写）由用户明确跳过。
+未使用 `git add -A`：`data/shadow/fetch_meta.json` 含 YouTube API key；`.git-rewrite/` 为临时历史重写产物；`cursor-comm-log.md` 与本次无关。

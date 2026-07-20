@@ -4,6 +4,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from app.config import get_settings
+from app.web.session import SESSION_COOKIE, sign_session
+
 
 @pytest.mark.asyncio
 async def test_admin_status_returns_dashboard(client):
@@ -24,6 +27,12 @@ async def test_admin_status_returns_dashboard(client):
 
     mock_service = MagicMock()
     mock_service.get_status = AsyncMock(return_value=payload)
+
+    settings = get_settings()
+    client.cookies.set(
+        SESSION_COOKIE,
+        sign_session({"authenticated": True}, settings.secret_key),
+    )
 
     with patch("app.web.routes.admin_status.OpsStatusService", return_value=mock_service):
         response = await client.get("/admin/status")
