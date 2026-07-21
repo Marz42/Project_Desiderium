@@ -50,7 +50,7 @@ class SnapshotService:
             content_ids = await self.list_due_content_ids()
 
         if not content_ids:
-            return {"requested": 0, "created": 0, "skipped": 0, "anomalies": 0}
+            return {"requested": 0, "snapshots_created": 0, "skipped": 0, "anomalies": 0}
 
         from sqlalchemy import select
 
@@ -98,7 +98,7 @@ class SnapshotService:
 
         return {
             "requested": len(content_ids),
-            "created": created,
+            "snapshots_created": created,
             "skipped": skipped,
             "anomalies": anomalies,
         }

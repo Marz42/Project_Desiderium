@@ -52,8 +52,9 @@ paradigma:
 - 数据访问统一走 `app/repositories/`（async `AsyncSession`）；业务逻辑在 `app/services/`；纯算法在 `app/domain/`（无 I/O、可单测）。
 - 平台细节只允许出现在 `app/adapters/<platform>/`；领域与服务层不得 import 平台 SDK 或页面选择器。
 - 算法阈值、权重、调度间隔一律来自 `config/*.yaml` 或 `Settings`，禁止在服务 / SQL / 模板中硬编码。
-- 结构化 JSON 日志（`app/logging_config.py`），`extra` 中带 `service` / `component`；密钥与 cookie 不得进入日志。
+- 结构化 JSON 日志（`app/logging_config.py`），`extra` 中带 `service` / `component`；密钥与 cookie 不得进入日志。`extra` 不得使用 LogRecord 保留字段名（如 `created`、`name`、`message`、`args`）；计数类字段用业务前缀（如 `snapshots_created`）。
 - 注释只解释"为什么"（规则来源、解析器的刻意限制），不复述代码行为。
+- 在 `AsyncSession` 下访问 ORM 关系集合前必须 eager-load（`selectinload` / `joinedload`）或显式预置空集合；同步路径懒加载会触发 `MissingGreenlet`。
 
 # Error Handling
 

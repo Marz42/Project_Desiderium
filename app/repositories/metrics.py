@@ -7,6 +7,7 @@ from typing import Any
 from sqlalchemy import desc, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.domain.trend_metrics import hour_bucket
 from app.models import ContentItem, MetricSnapshot, Platform, SourceQuality
@@ -150,11 +151,15 @@ class MetricsRepository:
         platform: Platform = Platform.YOUTUBE,
     ) -> list[ContentItem]:
         cutoff = datetime.now(UTC) - timedelta(days=lookback_days)
-        stmt = select(ContentItem).where(
-            ContentItem.platform == platform,
-            ContentItem.published_at.is_not(None),
-            ContentItem.published_at >= cutoff,
-            ContentItem.channel_external_id.is_not(None),
+        stmt = (
+            select(ContentItem)
+            .where(
+                ContentItem.platform == platform,
+                ContentItem.published_at.is_not(None),
+                ContentItem.published_at >= cutoff,
+                ContentItem.channel_external_id.is_not(None),
+            )
+            .options(selectinload(ContentItem.metric_snapshots))
         )
         result = await self._session.scalars(stmt)
         return list(result.all())
