@@ -1,46 +1,30 @@
 type,platform,name,url_or_id,tier,tags,note,enabled
-channel,youtube,Anime Balls Deep,UCgR3SrM8T6GCFUTuxSFlR7A,priority,"anime,recap,long","Top-tier anime recap competitor",true
-channel,youtube,Anime In Minutes,UCZqJbVP5P1cHVfQdCkJoyKA,priority,"anime,recap,short","Fast recap shorts specialist",true
-channel,youtube,Plot Armor,UCb9CyYGTSHwh9pASlZtMI3A,priority,"anime,recap,long","Popular long-form anime recaps",true
-channel,youtube,AnimeUproar,UCOsAfA06zghgALnXPp4VbGA,priority,"anime,recap,long","Consistent weekly recap output",true
-channel,youtube,Totally Not Mark,UCv3LuuW8auzYw1SdLmiLRAw,priority,"anime,recap,analysis","Manga/anime analysis and recaps",true
-channel,youtube,Anime Recapped,UCjFsfrQqliqmevpA96Aig9w,priority,"anime,recap,long","High-volume recap channel",true
-channel,youtube,HypeMyke,UCvG-3yOLfVD8ETddTa_6fpw,priority,"anime,recap,short","High-energy recap shorts",true
-channel,youtube,Anime Explained,UCLe4UKQfhpBIN05Cm5ap1Gg,priority,"anime,recap,analysis","Explainer-focused recaps",true
-channel,youtube,Otaku Spirit,UCKbS6TTiig4CX9bosyoc28Q,priority,"anime,recap,long","Otaku-focused recaps",true
-channel,youtube,QuickAnimeRecap,UCeaWZPQZNrhNSYCFiLXosNw,priority,"anime,recap,short","Quick recap shorts",true
-channel,youtube,Ani-One Asia,UC0wNSTMWIL3qaorLx0jie6A,priority,"anime,recap,official","Official anime distributor channel",true
-channel,youtube,Animity,UCDkyGyEl4M8kjA1AusHfEtg,priority,"anime,recap,long","Large anime recap channel",true
-channel,youtube,Recap-kun,UCAzzAsXz3y8j9_PRredjLNQ,priority,"anime,recap,long","Recap-kun narrative recaps",true
-channel,youtube,Anime Bench,UC2Zq6AKs9jGFzJ93YzbDFvw,priority,"anime,recap,long","Anime Bench recaps",true
-channel,youtube,Prime Recap,UCFIxVe7v_ZuYplz-lLJ5ECA,priority,"anime,recap,long","Prime Recap channel",true
-channel,youtube,AniCap,UCyuQEEEHdu4IAp12RcJQEPA,priority,"anime,recap,long","AniCap recap channel",true
-channel,youtube,Viper Anime Explained,UCsuBjlk1u-9oybSzdLsTeCQ,priority,"anime,recap,analysis","Viper explainers",true
-channel,youtube,AniRoll,UCuVDcQ4R905Brkms7jECcaQ,priority,"anime,recap,long","AniRoll recap channel",true
-channel,youtube,Anikun Explain,UCaVW3XAkmgC61Z3mdxugMeA,priority,"anime,recap,analysis","Anikun explainers",true
-channel,youtube,Manga Explained,UCc3xCO79t87Y2D5MevDAL_Q,priority,"anime,recap,manga","Manga/anime crossover explainers",true
-channel,youtube,Anime story explain,UCbmIZ1Yf2zDhtbuk1PAcSvw,priority,"anime,recap,long","Story explain recaps",true
-channel,youtube,Anime Explanation,UCMvo0zSXfwe5tnG70aoQ2NA,priority,"anime,recap,long","Anime Explanation channel",true
-channel,youtube,Watch Anime Recap,UCZzeiEcf5Le2ehOrbY-ajpw,priority,"anime,recap,long","Watch Anime Recap",true
-channel,youtube,Anime Recap,UCoAgvm2dAHyOLL_ng4IwpOA,priority,"anime,recap,long","Generic anime recap channel",true
-channel,youtube,Crazy Anime Recap,UCD3kY_pbefunrg3VBtwF1yw,priority,"anime,recap,long","Crazy Anime Recap",true
-channel,youtube,GC Anime Explain,UCo7cr9irkzQ3hKB-gGzXKyg,general,"anime,recap","General tier explainers",true
-channel,youtube,Recap Anime,UCjcVmaltrohAlLWIbz2vfNg,general,"anime,recap","General tier recap",true
-channel,youtube,NTC Anime Explain,UCTbYW6R3VVBjL1RpHvWSoVQ,general,"anime,recap","General tier explainers",true
-keyword,youtube,anime recap,,general,"generic,search","Generic recap discovery",true
-keyword,youtube,anime explained,,general,"generic,search","Explainer keyword discovery",true
-keyword,youtube,anime scene explained,,general,"generic,search","Scene explainer discovery",true
-keyword,youtube,solo leveling recap,,general,"solo-leveling,search","Solo Leveling trend watch",true
-keyword,youtube,jujutsu kaisen recap,,general,"jjk,search","JJK trend watch",true
-keyword,youtube,one piece recap,,general,"one-piece,search","One Piece trend watch",true
-keyword,youtube,demon slayer recap,,general,"demon-slayer,search","Demon Slayer trend watch",true
-keyword,youtube,chainsaw man recap,,general,"csm,search","Chainsaw Man trend watch",true
-anime,youtube,Solo Leveling,solo leveling recap,priority,"solo-leveling","Hot anime title watch",true
-anime,youtube,Jujutsu Kaisen,jujutsu kaisen recap,priority,"jjk","Hot anime title watch",true
-anime,youtube,One Piece,one piece recap,priority,"one-piece","Long-running title watch",true
-anime,youtube,Demon Slayer,demon slayer recap,priority,"demon-slayer","Popular shonen watch",true
-anime,youtube,Chainsaw Man,chainsaw man recap,priority,"csm","Recent hit watch",true
-anime,youtube,Frieren,frieren recap,general,"frieren","Steady performer watch",true
-anime,youtube,Dandadan,dandadan recap,general,"dandadan","Rising title watch",true
-anime,youtube,Kaiju No. 8,kaiju no 8 recap,general,"kaiju-no-8","Action title watch",true
-anime,youtube,Blue Lock,blue lock recap,general,"blue-lock","Sports anime watch",true
+channel,youtube,Anime Recap Official,UCi-MYdrJxXm4ppgK42hIT6Q,priority,"anime,recap,summary","官方频道，更新频繁",true
+channel,youtube,AnHeavenRecaps,UCnGunSFY0QbFo4sWxaBRlQg,priority,"anime,recap,quality","高质量手工 recap",true
+channel,youtube,Anime Recap,UCwY5oGogYdF6XY3x52Fbh-Q,priority,"anime,recap,fast","15分钟快剪型 recap",true
+channel,youtube,AnimeRecap,UCPhTe9pinQ1l9zbie_fCXRw,general,"anime,recap,explanation","解析+推荐型",true
+channel,youtube,Best Anime Recaps,UC3m6RWJjZQZy6qwJk95NUyQ,general,"anime,manhwa,manga","跨类型 recap",true
+channel,youtube,AniPlot,UCeZgPha74_UaYkQ8Ijdz5rg,general,"anime,recap,explained","剧情解析型",true
+channel,youtube,AnimeLog,UCwxb3FrgBGzI5MB0BvWSUOA,general,"anime,recap,long","长篇 recap",true
+channel,youtube,AniRecap,UC_nJM07uYQKLSq-0TpfoaXg,general,"anime,recap,viral","病毒式 recap",true
+channel,youtube,Anime Senpai,UCJ6g6p3GAjF17h7lw6TdWWw,priority,"anime,news,explained","综合动漫频道",true
+channel,youtube,Crunchyroll Collection,UC3ithU_MF3gBLGV9s_VZz_A,priority,"anime,official,clips","官方片段频道",true
+channel,youtube,Muse Asia,UCcfcA1TtSc4MEJFIDR3W08A,priority,"anime,official,asia","亚洲官方频道",true
+channel,youtube,Ani-One Asia,UC0wNSTfv3IzBuj5TBlmXGBw,priority,"anime,official,asia","亚洲官方频道2",true
+keyword,youtube,anime recap,,general,"keyword,generic","通用搜索词",true
+keyword,youtube,anime explained,,general,"keyword,generic","通用搜索词",true
+keyword,youtube,anime scene explained,,general,"keyword,generic","场景解析",true
+keyword,youtube,anime summary,,general,"keyword,generic","动画总结",true
+keyword,youtube,anime recap movie,,general,"keyword,movie","电影 recap",true
+keyword,youtube,best anime moments,,general,"keyword,moments","高能片段",true
+keyword,youtube,Solo Leveling recap,,priority,"keyword,solo-leveling","热门作品",true
+keyword,youtube,Jujutsu Kaisen recap,,priority,"keyword,jjk","热门作品",true
+keyword,youtube,One Piece recap,,priority,"keyword,one-piece","热门作品",true
+keyword,youtube,Demon Slayer recap,,priority,"keyword,demon-slayer","热门作品",true
+keyword,youtube,Chainsaw Man recap,,priority,"keyword,chainsaw-man","热门作品",true
+keyword,youtube,Frieren recap,,priority,"keyword,frieren","热门作品",true
+keyword,youtube,Attack on Titan explained,,general,"keyword,aot","经典作品",true
+keyword,youtube,Mushoku Tensei recap,,general,"keyword,mushoku","热门作品",true
+keyword,youtube,ReZero recap,,general,"keyword,rezero","热门作品",true
+keyword,youtube,anime recap shorts,,general,"keyword,shorts","Shorts 内容",true
+keyword,youtube,anime manhwa recap,,general,"keyword,manhwa","韩漫 recap",true
